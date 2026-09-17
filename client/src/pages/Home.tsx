@@ -17,6 +17,7 @@ import {
   Star,
   X,
 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 const images = {
   hero: "/manus-storage/hero-living-room_277d141a.jpg",
@@ -45,10 +46,21 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <div className="section-label"><span></span>{children}</div>;
 }
 
-function LeadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+type CalculatorDetails = {
+  area: number;
+  materialLabel: string;
+  workEstimate: number;
+  materialsEstimate: number;
+  totalEstimate: number;
+};
+
+function LeadModal({ open, onClose, calculator }: { open: boolean; onClose: () => void; calculator: CalculatorDetails }) {
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const submitLead = trpc.leads.submit.useMutation({
+    onSuccess: () => setSent(true),
+  });
 
   useEffect(() => {
     if (!open) setSent(false);
@@ -72,10 +84,11 @@ function LeadModal({ open, onClose }: { open: boolean; onClose: () => void }) {
             <p className="eyebrow">Первый шаг к ремонту без сюрпризов</p>
             <h2 id="modal-title">Запишитесь на замер</h2>
             <p className="modal-copy">Обсудим задачу, подскажем реалистичный бюджет и подготовим предварительный расчёт за 24 часа.</p>
-            <form onSubmit={(e) => { e.preventDefault(); setSent(true); }} className="modal-form">
+            <form onSubmit={(e) => { e.preventDefault(); submitLead.mutate({ name, phone, service: "Запись на замер", source: "calculator", ...calculator }); }} className="modal-form">
               <label>Как к вам обращаться<input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ваше имя" /></label>
               <label>Телефон<input value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="+7 (___) ___-__-__" /></label>
-              <button className="button button-brass" type="submit">Получить расчёт <ArrowRight size={17} /></button>
+              <button className="button button-brass" type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? "Отправляем…" : "Получить расчёт"} <ArrowRight size={17} /></button>
+              {submitLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
               <small>Нажимая кнопку, вы соглашаетесь с обработкой персональных данных.</small>
             </form>
           </>
@@ -91,6 +104,9 @@ export default function Home() {
   const [area, setArea] = useState(100);
   const [materialLevel, setMaterialLevel] = useState("premium");
   const [formSent, setFormSent] = useState(false);
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactService, setContactService] = useState("");
   const materialOptions = {
     base: { label: "Рациональный", cost: 25000, note: "качественные базовые бренды" },
     premium: { label: "Премиум", cost: 50000, note: "проверенные европейские и российские бренды" },
@@ -100,6 +116,8 @@ export default function Home() {
   const workEstimate = area * 40000;
   const materialsEstimate = area * selectedMaterial.cost;
   const totalEstimate = workEstimate + materialsEstimate;
+  const calculator = { area, materialLabel: selectedMaterial.label, workEstimate, materialsEstimate, totalEstimate };
+  const submitContactLead = trpc.leads.submit.useMutation({ onSuccess: () => setFormSent(true) });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setLeadOpen(false); setMenuOpen(false); } };
@@ -235,7 +253,7 @@ export default function Home() {
           <div className="contact-panel">
             <div className="contact-copy"><SectionLabel>Начнём с разговора</SectionLabel><h2>Покажите<br />вашу квартиру.<br /><i>Остальное — наша<br />работа.</i></h2><p>Оставьте контакты — обсудим задачу, назначим замер и пришлём предварительный расчёт за 24 часа.</p><div className="contact-direct"><a href="tel:+74951234567"><Phone size={18} />+7 495 123 45 67</a><a href="https://t.me" target="_blank" rel="noreferrer"><Send size={18} />Telegram</a><a href="https://wa.me" target="_blank" rel="noreferrer"><MessageCircle size={18} />WhatsApp</a></div></div>
             <div className="contact-form-wrap">
-              {formSent ? <div className="inline-success"><div className="success-icon"><Check size={25} /></div><h3>Заявка отправлена</h3><p>Свяжемся с вами в рабочее время и уточним удобный формат первой встречи.</p></div> : <form className="contact-form" onSubmit={(e) => { e.preventDefault(); setFormSent(true); }}><label>Ваше имя<input required placeholder="Как к вам обращаться" /></label><label>Телефон<input required placeholder="+7 (___) ___-__-__" /></label><label>Что планируете?<select defaultValue=""><option value="" disabled>Выберите вариант</option><option>Ремонт квартиры под ключ</option><option>Дизайн-проект + ремонт</option><option>Инженерные системы</option><option>Нужна консультация</option></select></label><button type="submit" className="button button-brass full-width">Отправить заявку <ArrowRight size={18} /></button><small>Без спама. Только ответ по вашему проекту.</small></form>}
+              {formSent ? <div className="inline-success"><div className="success-icon"><Check size={25} /></div><h3>Заявка отправлена</h3><p>Свяжемся с вами в рабочее время и уточним удобный формат первой встречи.</p></div> : <form className="contact-form" onSubmit={(e) => { e.preventDefault(); submitContactLead.mutate({ name: contactName, phone: contactPhone, service: contactService, source: "contact", ...calculator }); }}><label>Ваше имя<input value={contactName} onChange={(e) => setContactName(e.target.value)} required placeholder="Как к вам обращаться" /></label><label>Телефон<input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} required placeholder="+7 (___) ___-__-__" /></label><label>Что планируете?<select value={contactService} onChange={(e) => setContactService(e.target.value)} required><option value="" disabled>Выберите вариант</option><option>Ремонт квартиры под ключ</option><option>Дизайн-проект + ремонт</option><option>Инженерные системы</option><option>Нужна консультация</option></select></label><button type="submit" disabled={submitContactLead.isPending} className="button button-brass full-width">{submitContactLead.isPending ? "Отправляем…" : "Отправить заявку"} <ArrowRight size={18} /></button>{submitContactLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}<small>Без спама. Только ответ по вашему проекту.</small></form>}
             </div>
           </div>
         </section>
@@ -244,7 +262,7 @@ export default function Home() {
       <footer><div className="footer-brand"><span className="brand-mark">КР</span><span><b>Классный</b><em>Ремонт</em></span></div><div className="footer-links"><a href="#projects">Портфолио</a><a href="#process">Процесс</a><a href="#prices">Цены</a><a href="#contacts">Контакты</a></div><div className="footer-bottom"><span>© 2026 ИП «Классный Ремонт»</span><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div></footer>
 
       <div className="messengers"><a href="https://t.me" target="_blank" rel="noreferrer" aria-label="Написать в Telegram" className="telegram"><Send size={20} /></a><a href="https://wa.me" target="_blank" rel="noreferrer" aria-label="Написать в WhatsApp" className="whatsapp"><MessageCircle size={21} /></a></div>
-      <LeadModal open={leadOpen} onClose={() => setLeadOpen(false)} />
+      <LeadModal open={leadOpen} onClose={() => setLeadOpen(false)} calculator={calculator} />
     </div>
   );
 }
