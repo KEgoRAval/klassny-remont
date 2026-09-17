@@ -25,8 +25,12 @@ describe("lead form feedback", () => {
   it("requires separate consent for processing and Telegram delivery in every homepage form", () => {
     expect(source).toContain("<PersonalDataConsent formId=\"lead-modal\"");
     expect(source).toContain("<PersonalDataConsent formId=\"contact-form\"");
-    expect(source).toContain("if (!personalDataConsent || !telegramConsent) return;");
-    expect(source).toContain("if (!contactPersonalDataConsent || !contactTelegramConsent) return;");
+    expect(source).toContain("setShowConsentValidation(true)");
+    expect(source).toContain("setShowContactConsentValidation(true)");
+    expect(source).toContain("showValidation={showConsentValidation}");
+    expect(source).toContain("showValidation={showContactConsentValidation}");
+    expect(source).toContain("onConsentInvalid={() => setShowConsentValidation(true)}");
+    expect(source).toContain("onConsentInvalid={() => setShowContactConsentValidation(true)}");
   });
 
   it("uses a 40,000 ₽/m² rational renovation rate without exposing material ratios", () => {

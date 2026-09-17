@@ -20,9 +20,11 @@ describe("residential complex estimate form", () => {
 
   it("requires separate processing and Telegram consent before submission", () => {
     expect(source).toContain("PersonalDataConsent");
-    expect(source).toContain("if (!personalDataConsent || !telegramConsent) return;");
+    expect(source).toContain("if (!personalDataConsent || !telegramConsent) { setShowConsentValidation(true); return; }");
     expect(source).toContain("personalDataConsent, telegramConsent");
     expect(source).toContain("PERSONAL_DATA_CONSENT_VERSION");
+    expect(source).toContain("showValidation={showConsentValidation}");
+    expect(source).toContain("onConsentInvalid={() => setShowConsentValidation(true)}");
   });
 
   it("keeps the price estimate transparent without showing materials ratio", () => {

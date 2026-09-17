@@ -86,6 +86,7 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
   const [phone, setPhone] = useState("");
   const [personalDataConsent, setPersonalDataConsent] = useState(false);
   const [telegramConsent, setTelegramConsent] = useState(false);
+  const [showConsentValidation, setShowConsentValidation] = useState(false);
   const submitLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
       onSuccess(name);
@@ -93,11 +94,18 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
       setPhone("");
       setPersonalDataConsent(false);
       setTelegramConsent(false);
+      setShowConsentValidation(false);
     },
   });
+  useEffect(() => {
+    if (!open) setShowConsentValidation(false);
+  }, [open]);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!personalDataConsent || !telegramConsent) return;
+    if (!personalDataConsent || !telegramConsent) {
+      setShowConsentValidation(true);
+      return;
+    }
     submitLead.mutate({ name, phone, service: "Запись на замер", source: "calculator", ...calculator, personalDataConsent, telegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION });
   };
 
@@ -112,7 +120,7 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
         <form onSubmit={handleSubmit} className="modal-form">
           <label>Как к вам обращаться<input value={name} onChange={(e) => setName(e.target.value)} disabled={submitLead.isPending} required placeholder="Ваше имя" /></label>
           <label>Телефон<input value={phone} onChange={(e) => setPhone(e.target.value)} disabled={submitLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
-          <PersonalDataConsent formId="lead-modal" personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
+          <PersonalDataConsent formId="lead-modal" personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} showValidation={showConsentValidation} onConsentInvalid={() => setShowConsentValidation(true)} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
           <button className={submitLead.isPending ? "button button-brass form-submit-loading" : "button button-brass"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <SendingContent label="Отправляем заявку" /> : <>Получить расчёт <ArrowRight size={17} /></>}</button>
           {submitLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
         </form>
@@ -131,6 +139,7 @@ export default function Home() {
   const [contactService, setContactService] = useState("");
   const [contactPersonalDataConsent, setContactPersonalDataConsent] = useState(false);
   const [contactTelegramConsent, setContactTelegramConsent] = useState(false);
+  const [showContactConsentValidation, setShowContactConsentValidation] = useState(false);
   const workRate = 40_000;
   const materialsRatio = 0.55;
   const workEstimate = area * workRate;
@@ -149,11 +158,15 @@ export default function Home() {
       setContactService("");
       setContactPersonalDataConsent(false);
       setContactTelegramConsent(false);
+      setShowContactConsentValidation(false);
     },
   });
   const submitContactForm = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!contactPersonalDataConsent || !contactTelegramConsent) return;
+    if (!contactPersonalDataConsent || !contactTelegramConsent) {
+      setShowContactConsentValidation(true);
+      return;
+    }
     submitContactLead.mutate({ name: contactName, phone: contactPhone, service: contactService, source: "contact", ...calculator, personalDataConsent: contactPersonalDataConsent, telegramConsent: contactTelegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION });
   };
 
@@ -308,7 +321,7 @@ export default function Home() {
                 <label>Ваше имя<input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={submitContactLead.isPending} required placeholder="Как к вам обращаться" /></label>
                 <label>Телефон<input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={submitContactLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
                 <label>Что планируете?<select value={contactService} onChange={(e) => setContactService(e.target.value)} disabled={submitContactLead.isPending} required><option value="" disabled>Выберите вариант</option><option>Ремонт квартиры под ключ</option><option>Дизайн-проект + ремонт</option><option>Инженерные системы</option><option>Нужна консультация</option></select></label>
-                <PersonalDataConsent formId="contact-form" personalDataConsent={contactPersonalDataConsent} telegramConsent={contactTelegramConsent} disabled={submitContactLead.isPending} onPersonalDataConsentChange={setContactPersonalDataConsent} onTelegramConsentChange={setContactTelegramConsent} />
+                <PersonalDataConsent formId="contact-form" personalDataConsent={contactPersonalDataConsent} telegramConsent={contactTelegramConsent} disabled={submitContactLead.isPending} showValidation={showContactConsentValidation} onConsentInvalid={() => setShowContactConsentValidation(true)} onPersonalDataConsentChange={setContactPersonalDataConsent} onTelegramConsentChange={setContactTelegramConsent} />
                 <button type="submit" disabled={submitContactLead.isPending} className={submitContactLead.isPending ? "button button-brass full-width form-submit-loading" : "button button-brass full-width"}>{submitContactLead.isPending ? <SendingContent label="Заявка отправляется" /> : <>Отправить заявку <ArrowRight size={18} /></>}</button>
                 {submitContactLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
                 <small>Без рекламных рассылок. Только ответ по вашему проекту.</small>
