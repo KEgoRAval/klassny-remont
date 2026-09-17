@@ -200,12 +200,15 @@ export default function Home() {
             <article className="promise-card"><div className="promise-icon"><Clock3 /></div><span>03</span><h3>Держим темп</h3><p>Работаем по календарному плану, присылаем отчёт и сразу сообщаем о решениях.</p></article>
             <article className="promise-card dark-card"><Sparkles size={27} /><h3>Не обещаем «за месяц»</h3><p>Качественный ремонт начинается от 4 месяцев. Мы честны со сроками — и соблюдаем их.</p></article>
           </div>
+          <div className="site-visit">
+            <div><SectionLabel>Проверка до договора</SectionLabel><h3>Пригласим вас<br /><i>на объект в работе.</i></h3></div>
+            <div><p>По предварительной договорённости покажем действующий объект. Вы увидите порядок на площадке, организацию процессов и уровень контроля качества без постановочных кадров.</p><a className="text-link dark-link" href="#contacts">Обсудить визит <ArrowRight size={17} /></a></div>
+          </div>
         </section>
 
         <section id="projects" className="projects section-padding">
           <div className="section-heading">
             <div><SectionLabel>Реализованные проекты</SectionLabel><h2>Каждый объект —<br /><i>свой характер.</i></h2></div>
-            <a className="text-link dark-link" href="#contacts">Все проекты <ArrowRight size={17} /></a>
           </div>
           <div className="project-grid">
             {projectCards.map((project, index) => (
@@ -230,7 +233,7 @@ export default function Home() {
 
         <section id="prices" className="estimate section-padding">
           <div className="estimate-content">
-            <div><SectionLabel>Открытая методология</SectionLabel><h2>Понимать бюджет<br /><i>до начала работ.</i></h2><p>Стоимость складывается из площади, сложности инженерии и состояния объекта. Мы не называем цену «от балды» — разбираем смету построчно.</p><ul className="tick-list"><li><Check size={16} />Рациональный ремонт — от 40 000 ₽/м²</li><li><Check size={16} />Материалы — ориентировочно 55% от работ</li><li><Check size={16} />Мебель и декор — отдельно</li></ul></div>
+            <div><SectionLabel>Открытая методология</SectionLabel><h2>Понимать бюджет<br /><i>до начала работ.</i></h2><p>Стоимость складывается из площади, сложности инженерии и состояния объекта. Мы не называем цену «от балды» — разбираем смету построчно.</p><ul className="tick-list"><li><Check size={16} />Рациональный ремонт — от 40 000 ₽/м²</li><li><Check size={16} />Материалы — отдельной строкой в смете</li><li><Check size={16} />Мебель и декор — отдельно</li></ul></div>
             <div className="calculator-card">
               <div className="calc-top"><span>Рациональный ремонт</span><span>без мебели и декора</span></div>
               <div className="estimate-price">от {totalEstimate.toLocaleString("ru-RU")} ₽</div>
@@ -239,7 +242,7 @@ export default function Home() {
               <div className="range-labels"><span>50 м²</span><span>250 м²</span></div>
               <div className="material-field">
                 <div className="range-row"><span>Стоимость работ</span><output>от {workRate.toLocaleString("ru-RU")} ₽/м²</output></div>
-                <div className="materials-note"><span>Материалы</span><b>≈ 55% от стоимости работ</b></div>
+                <div className="materials-note"><span>Материалы</span><b>в отдельной строке сметы</b></div>
                 <small>Ориентир для рационального уровня отделки. Точную спецификацию закрепим в смете.</small>
               </div>
               <div className="calc-divider"></div>
@@ -259,7 +262,7 @@ export default function Home() {
         </section>
 
         <section id="about" className="about section-padding">
-          <div className="about-grid"><div className="about-number">12<span>лет</span></div><div><SectionLabel>О компании</SectionLabel><h2>За красивым<br />интерьером —<br /><i>сильная система.</i></h2></div><div className="about-copy"><p>«Классный Ремонт» — команда инженеров, прорабов и мастеров, которая работает с квартирами бизнес- и премиум-класса в Москве.</p><p>Мы не берём десятки объектов одновременно. На каждом проекте есть ответственный прораб, единый чат и план, по которому удобно сверяться.</p><a href="#contacts" className="text-link">Познакомиться с командой <ArrowRight size={17} /></a></div></div>
+          <div className="about-grid"><div className="about-number">12<span>лет</span></div><div><SectionLabel>О компании</SectionLabel><h2>За красивым<br />интерьером —<br /><i>сильная система.</i></h2></div><div className="about-copy"><p>«Классный Ремонт» — команда инженеров, прорабов и мастеров, которая работает с квартирами бизнес- и премиум-класса в Москве.</p><p>Мы не берём десятки объектов одновременно. На каждом проекте есть ответственный прораб, единый чат и план, по которому удобно сверяться.</p></div></div>
         </section>
 
         <section id="contacts" className="contact-section">

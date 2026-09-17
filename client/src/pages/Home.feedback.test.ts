@@ -19,10 +19,19 @@ describe("lead form feedback", () => {
     expect(source).toContain("<ThankYouModal name={thankYouName}");
   });
 
-  it("uses a 40,000 ₽/m² rational renovation rate and 55% materials estimate", () => {
+  it("uses a 40,000 ₽/m² rational renovation rate without exposing material ratios", () => {
     expect(source).toContain("const workRate = 40_000");
     expect(source).toContain("const materialsRatio = 0.55");
     expect(source).toContain("Рациональный ремонт — от 40 000 ₽/м²");
+    expect(source).toContain("Материалы — отдельной строкой в смете");
+    expect(source).not.toContain("≈ 55% от стоимости работ");
     expect(source).not.toContain("materialLevel");
+  });
+
+  it("offers an active worksite visit and removes redundant navigation links", () => {
+    expect(source).toContain("Пригласим вас");
+    expect(source).toContain("на объект в работе.");
+    expect(source).not.toContain("Познакомиться с командой");
+    expect(source).not.toContain(">Все проекты <");
   });
 });
