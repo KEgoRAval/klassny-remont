@@ -51,9 +51,11 @@ describe("lead form feedback", () => {
     expect(source).toContain("2011448980");
   });
 
-  it("presents the ЖК Very project without status or visualization labels", () => {
+  it("presents four individual projects without status or visualization labels", () => {
     expect(source).toContain("ЖК Very");
-    expect(source).toContain("51,4 м²");
+    expect(source).toContain("ЖК Ever");
+    expect(source).toContain("ЖК Остров");
+    expect(source).toContain("ЖК Level");
     expect(source).not.toContain("Проект в работе");
     expect(source).not.toContain("Интерьерная визуализация");
     expect(source).not.toContain("интерьерные визуализации");
@@ -68,13 +70,13 @@ describe("lead form feedback", () => {
     expect(source).not.toContain("key={project.title}");
   });
 
-  it("presents ЖК Ever as a distinct portfolio case", () => {
-    expect(source).toContain("const everProjectCards");
-    expect(source).toContain("ЖК Ever · Москва");
-    expect(source).toContain("Квартира 101,9 м² · Москва.");
+  it("uses a single four-item portfolio data set", () => {
+    expect(source).toContain("const projectCards");
+    expect(source).not.toContain("veryProjectCards");
+    expect(source).not.toContain("everProjectCards");
     expect(source).toContain("ever-enhanced-living_6eb96fe0.png");
-    expect(source).toContain("ever-enhanced-entry_054ed219.png");
     expect(source).toContain("ever-enhanced-bedroom_5f368637.png");
-    expect(source).toContain("ever-enhanced-shower_967e9d92.png");
+    expect(source).toContain("very-enhanced-bedroom_262c2040.png");
+    expect(source).toContain("ever-enhanced-entry_054ed219.png");
   });
 });
