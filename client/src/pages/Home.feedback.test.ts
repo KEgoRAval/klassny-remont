@@ -62,4 +62,9 @@ describe("lead form feedback", () => {
     expect(source).toContain("very-enhanced-bedroom_262c2040.png");
     expect(source).toContain("very-enhanced-bathroom_c918e00d.png");
   });
+
+  it("uses a stable unique key for each portfolio card", () => {
+    expect(source).toContain("key={project.image}");
+    expect(source).not.toContain("key={project.title}");
+  });
 });

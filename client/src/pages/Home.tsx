@@ -212,7 +212,7 @@ export default function Home() {
           </div>
           <div className="project-grid">
             {projectCards.map((project, index) => (
-              <article className={`project-card project-${index + 1}`} key={project.title}>
+              <article className={`project-card project-${index + 1}`} key={project.image}>
                 <img src={project.image} alt={project.title} loading="lazy" />
                 <div className="project-shade"></div>
                 <div className="project-meta"><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
