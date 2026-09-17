@@ -3,19 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <meta name="description" content="Классный Ремонт — ремонт квартир под ключ в премиальном сегменте в Москве. Фиксируем смету и сроки в договоре." />
-    <meta name="theme-color" content="#18241d" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..700,0..100&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <title>Классный Ремонт — ремонт квартир в Москве</title>
+    <!--app-head-->
     <script type="application/ld+json">
-      {"@context":"https://schema.org","@type":"LocalBusiness","name":"Классный Ремонт","legalName":"ИП Бережной Егор Юрьевич","description":"Ремонт квартир под ключ в премиальном сегменте в Москве","areaServed":"Москва","priceRange":"от 40 000 ₽/м²","telephone":"+7 977 948-06-72","address":{"@type":"PostalAddress","addressLocality":"Москва","addressCountry":"RU"},"aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"37"}}
+      {"@context":"https://schema.org","@graph":[{"@type":["HomeAndConstructionBusiness","LocalBusiness"],"@id":"#organization","name":"Классный Ремонт","legalName":"ИП Бережной Егор Юрьевич","description":"Ремонт квартир бизнес- и премиум-класса под ключ в Москве: от замера и сметы до приёмки готового объекта.","url":"/","areaServed":[{"@type":"City","name":"Москва"},{"@type":"AdministrativeArea","name":"Московская область"}],"priceRange":"от 40 000 ₽/м² за работы","telephone":"+7 977 948-06-72","address":{"@type":"PostalAddress","addressLocality":"Москва","addressCountry":"RU"},"hasOfferCatalog":{"@type":"OfferCatalog","name":"Услуги Классного Ремонта","itemListElement":[{"@type":"Offer","itemOffered":{"@type":"Service","name":"Ремонт квартиры под ключ"}},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Дизайн-проект и ремонт"}},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Инженерные системы"}},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Черновая отделка"}}]},"aggregateRating":{"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"37"}},{"@type":"FAQPage","@id":"#faq","mainEntity":[{"@type":"Question","name":"Сколько стоит ремонт квартиры в Москве?","acceptedAnswer":{"@type":"Answer","text":"Стоимость работ начинается от 40 000 ₽ за м². Точный бюджет зависит от площади, состояния квартиры, инженерных решений и состава отделки. Материалы, мебель и декор рассчитываются отдельными строками."}},{"@type":"Question","name":"Что входит в ремонт под ключ?","acceptedAnswer":{"@type":"Answer","text":"В ремонт под ключ входят организация работ, черновая и чистовая отделка, реализация инженерных систем по проекту, контроль критичных этапов, фотоотчёты и подготовка объекта к приёмке."}},{"@type":"Question","name":"Как контролируется смета и изменения по ходу работ?","acceptedAnswer":{"@type":"Answer","text":"До старта в договоре фиксируются согласованные объём работ, стоимость и порядок изменений. Перед новым решением клиент получает информацию о его влиянии на бюджет и график."}},{"@type":"Question","name":"Можно ли увидеть объект до договора?","acceptedAnswer":{"@type":"Answer","text":"По предварительной договорённости Классный Ремонт приглашает на объект в работе, чтобы показать организацию площадки и подход к контролю качества."}},{"@type":"Question","name":"Сколько длится ремонт квартиры?","acceptedAnswer":{"@type":"Answer","text":"Ориентировочный срок качественного ремонта начинается от 4 месяцев. Точный календарный план готовится после замера и согласования проекта."}}]}]}
     </script>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <div id="root"><!--app-html--></div>
+    <script type="module" src="/src/entry-client.tsx"></script>
     <script defer src="%VITE_ANALYTICS_ENDPOINT%/umami" data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
   </body>
 </html>

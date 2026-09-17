@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 
 const source = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
 const metadata = readFileSync(resolve(process.cwd(), "client/index.html"), "utf8");
+const llms = readFileSync(resolve(process.cwd(), "client/public/llms.txt"), "utf8");
+const pricing = readFileSync(resolve(process.cwd(), "client/public/pricing.md"), "utf8");
 
 describe("lead form feedback", () => {
   it("shows sending content in both lead submission paths", () => {
@@ -80,5 +82,21 @@ describe("lead form feedback", () => {
     expect(source).toContain("ever-enhanced-bedroom_5f368637.png");
     expect(source).toContain("very-enhanced-bedroom_262c2040.png");
     expect(source).toContain("ever-enhanced-entry_054ed219.png");
+  });
+
+  it("provides direct local answers and matching FAQ schema for AI search", () => {
+    expect(source).toContain("Сколько стоит ремонт квартиры в Москве?");
+    expect(source).toContain("Можно ли увидеть ваш объект до договора?");
+    expect(source).toContain("Как контролируется смета и изменения по ходу работ?");
+    expect(metadata).toContain('"@type":"FAQPage"');
+    expect(metadata).toContain('"HomeAndConstructionBusiness"');
+    expect(metadata).toContain('"areaServed"');
+  });
+
+  it("provides machine-readable pricing and company information", () => {
+    expect(llms).toContain("Классный Ремонт — ИП Бережной Егор Юрьевич");
+    expect(llms).toContain("от 40 000 ₽/м²");
+    expect(pricing).toContain("Стоимость работ начинается **от 40 000 ₽ за м²**");
+    expect(pricing).toContain("Ориентировочный срок ремонта начинается от **4 месяцев**");
   });
 });
