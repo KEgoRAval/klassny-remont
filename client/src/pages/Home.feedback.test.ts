@@ -43,6 +43,8 @@ describe("lead form feedback", () => {
   });
 
   it("displays the supplied sole proprietor registration details", () => {
+    expect(source).toContain("ИП Бережной Егор Юрьевич");
+    expect(metadata).toContain('"legalName":"ИП Бережной Егор Юрьевич"');
     expect(source).toContain("ОГРНИП");
     expect(source).toContain("321527500117786");
     expect(source).toContain("ИНН");
