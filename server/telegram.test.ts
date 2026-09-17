@@ -6,10 +6,10 @@ const sampleLead = {
   phone: "+7 999 123 45 67",
   service: "Ремонт квартиры под ключ",
   area: 100,
-  materialLabel: "Премиум",
+  materialLabel: "Рациональный",
   workEstimate: 4_000_000,
-  materialsEstimate: 5_000_000,
-  totalEstimate: 9_000_000,
+  materialsEstimate: 2_200_000,
+  totalEstimate: 6_200_000,
   source: "calculator" as const,
 };
 
@@ -20,8 +20,8 @@ describe("Telegram lead delivery", () => {
     expect(message).toContain("<b>Новая заявка — Классный Ремонт</b>");
     expect(message).toContain("Анна &lt;тест&gt;");
     expect(message).toContain("100 м²");
-    expect(message).toContain("Премиум");
-    expect(message).toContain("9 000 000 ₽");
+    expect(message).toContain("Рациональный");
+    expect(message).toContain("6 200 000 ₽");
   });
 
   it("sends a formatted message using server-only credentials", async () => {

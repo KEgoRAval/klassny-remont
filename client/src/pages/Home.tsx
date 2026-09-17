@@ -111,21 +111,16 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [leadOpen, setLeadOpen] = useState(false);
   const [area, setArea] = useState(100);
-  const [materialLevel, setMaterialLevel] = useState("premium");
   const [thankYouName, setThankYouName] = useState<string | null>(null);
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactService, setContactService] = useState("");
-  const materialOptions = {
-    base: { label: "Рациональный", cost: 25000, note: "качественные базовые бренды" },
-    premium: { label: "Премиум", cost: 50000, note: "проверенные европейские и российские бренды" },
-    signature: { label: "Индивидуальный", cost: 85000, note: "натуральный камень, шпон и заказные решения" },
-  };
-  const selectedMaterial = materialOptions[materialLevel as keyof typeof materialOptions];
-  const workEstimate = area * 40000;
-  const materialsEstimate = area * selectedMaterial.cost;
+  const workRate = 40_000;
+  const materialsRatio = 0.55;
+  const workEstimate = area * workRate;
+  const materialsEstimate = Math.round(workEstimate * materialsRatio);
   const totalEstimate = workEstimate + materialsEstimate;
-  const calculator = { area, materialLabel: selectedMaterial.label, workEstimate, materialsEstimate, totalEstimate };
+  const calculator = { area, materialLabel: "Рациональный", workEstimate, materialsEstimate, totalEstimate };
   const showThankYou = (name: string) => {
     setLeadOpen(false);
     setThankYouName(name);
@@ -235,19 +230,17 @@ export default function Home() {
 
         <section id="prices" className="estimate section-padding">
           <div className="estimate-content">
-            <div><SectionLabel>Открытая методология</SectionLabel><h2>Понимать бюджет<br /><i>до начала работ.</i></h2><p>Стоимость складывается из площади, сложности инженерии, состояния объекта и выбранных решений. Мы не называем цену «от балды» — разбираем смету построчно.</p><ul className="tick-list"><li><Check size={16} />Работы — от 40 000 ₽/м²</li><li><Check size={16} />Материалы и мебель — отдельно</li><li><Check size={16} />Смета и график платежей — до договора</li></ul></div>
+            <div><SectionLabel>Открытая методология</SectionLabel><h2>Понимать бюджет<br /><i>до начала работ.</i></h2><p>Стоимость складывается из площади, сложности инженерии и состояния объекта. Мы не называем цену «от балды» — разбираем смету построчно.</p><ul className="tick-list"><li><Check size={16} />Рациональный ремонт — от 40 000 ₽/м²</li><li><Check size={16} />Материалы — ориентировочно 55% от работ</li><li><Check size={16} />Мебель и декор — отдельно</li></ul></div>
             <div className="calculator-card">
-              <div className="calc-top"><span>Ориентир по бюджету</span><span>без мебели и декора</span></div>
+              <div className="calc-top"><span>Рациональный ремонт</span><span>без мебели и декора</span></div>
               <div className="estimate-price">от {totalEstimate.toLocaleString("ru-RU")} ₽</div>
               <div className="range-row"><label htmlFor="area">Площадь квартиры</label><output>{area} м²</output></div>
               <input id="area" type="range" min="50" max="250" step="5" value={area} onChange={(e) => setArea(Number(e.target.value))} style={{ "--value": `${((area - 50) / 200) * 100}%` } as React.CSSProperties} />
               <div className="range-labels"><span>50 м²</span><span>250 м²</span></div>
               <div className="material-field">
-                <div className="range-row"><label htmlFor="materials">Качество материалов</label><output>{selectedMaterial.label}</output></div>
-                <select id="materials" value={materialLevel} onChange={(e) => setMaterialLevel(e.target.value)}>
-                  {Object.entries(materialOptions).map(([value, option]) => <option value={value} key={value}>{option.label} — от {option.cost.toLocaleString("ru-RU")} ₽/м²</option>)}
-                </select>
-                <small>{selectedMaterial.note}</small>
+                <div className="range-row"><span>Стоимость работ</span><output>от {workRate.toLocaleString("ru-RU")} ₽/м²</output></div>
+                <div className="materials-note"><span>Материалы</span><b>≈ 55% от стоимости работ</b></div>
+                <small>Ориентир для рационального уровня отделки. Точную спецификацию закрепим в смете.</small>
               </div>
               <div className="calc-divider"></div>
               <div className="calc-breakdown"><div><span>Работы</span><b>от {workEstimate.toLocaleString("ru-RU")} ₽</b></div><div><span>Материалы</span><b>от {materialsEstimate.toLocaleString("ru-RU")} ₽</b></div></div>

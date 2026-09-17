@@ -18,4 +18,11 @@ describe("lead form feedback", () => {
     expect(source).toContain("showThankYou(contactName)");
     expect(source).toContain("<ThankYouModal name={thankYouName}");
   });
+
+  it("uses a 40,000 ₽/m² rational renovation rate and 55% materials estimate", () => {
+    expect(source).toContain("const workRate = 40_000");
+    expect(source).toContain("const materialsRatio = 0.55");
+    expect(source).toContain("Рациональный ремонт — от 40 000 ₽/м²");
+    expect(source).not.toContain("materialLevel");
+  });
 });
