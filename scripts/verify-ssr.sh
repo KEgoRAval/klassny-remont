@@ -31,6 +31,7 @@ blog="$(curl -fsS --compressed -A "$UA" "$BASE/blog")"
 assert_contains "$blog" '<title>Блог о ремонте квартир в Москве — Классный Ремонт</title>' 'Blog title is present'
 assert_contains "$blog" 'Сколько стоит ремонт квартиры в Москве в 2026 году' 'Blog index contains practical article'
 assert_contains "$blog" 'Ремонт в ЖК «ВЭРИ на Ботанической»' 'Blog index contains geo article'
+assert_contains "$blog" 'Ремонт в ЖК «ЗИЛАРТ»' 'Blog index contains additional geo article'
 assert_contains "$blog" 'rel="canonical" href="http://localhost:4101/blog"' 'Blog canonical is present'
 
 article="$(curl -fsS --compressed -A "$UA" "$BASE/blog/stoimost-remonta-kvartiry-v-moskve-2026")"
@@ -51,6 +52,7 @@ sitemap="$(curl -fsS "$BASE/sitemap.xml")"
 assert_contains "$sitemap" "<loc>$BASE/</loc>" 'Sitemap contains canonical home URL'
 assert_contains "$sitemap" "<loc>$BASE/blog</loc>" 'Sitemap contains blog index'
 assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-zhk-ever-v-moskve</loc>" 'Sitemap contains geo article'
+assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-zhk-zilart-v-moskve</loc>" 'Sitemap contains additional geo article'
 
 llms="$(curl -fsS "$BASE/llms.txt")"
 assert_contains "$llms" 'ИП Бережной Егор Юрьевич' 'llms.txt contains legal entity'
@@ -59,6 +61,7 @@ assert_contains "$llms" 'Приёмка квартиры в новостройк
 
 llms_full="$(curl -fsS "$BASE/llms-full.txt")"
 assert_contains "$llms_full" 'ЖК «Остров»' 'llms-full.txt maps geo articles'
+assert_contains "$llms_full" 'ЖК «Ривер Парк Коломенское»' 'llms-full.txt maps new geo article'
 
 pricing="$(curl -fsS "$BASE/pricing.md")"
 assert_contains "$pricing" 'Что входит в стоимость работ' 'Machine-readable price methodology is public'
