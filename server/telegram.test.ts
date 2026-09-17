@@ -24,6 +24,12 @@ describe("Telegram lead delivery", () => {
     expect(message).toContain("6 200 000 ₽");
   });
 
+  it("preserves the auto-filled residential complex in an estimate request", () => {
+    const message = formatLeadMessage({ ...sampleLead, service: "Расчёт ремонта в ЖК «ЗИЛАРТ»" });
+
+    expect(message).toContain("Расчёт ремонта в ЖК «ЗИЛАРТ»");
+  });
+
   it("sends a formatted message using server-only credentials", async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
 

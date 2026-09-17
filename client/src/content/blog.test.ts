@@ -4,7 +4,7 @@ import { prefetchForPath } from "../ssr/prefetch";
 
 describe("SEO blog content", () => {
   it("publishes a focused cluster of practical and geo articles", () => {
-    expect(blogPosts).toHaveLength(10);
+    expect(blogPosts).toHaveLength(13);
     expect(blogPosts.map(post => post.slug)).toEqual(expect.arrayContaining([
       "stoimost-remonta-kvartiry-v-moskve-2026",
       "sroki-remonta-kvartiry-po-etapam",
@@ -16,6 +16,9 @@ describe("SEO blog content", () => {
       "remont-v-zhk-simvol-v-moskve",
       "remont-v-zhk-river-park-kolomenskoe",
       "remont-v-zhk-zilart-v-moskve",
+      "remont-v-zhk-sobytie-v-moskve",
+      "remont-v-zhk-serdtse-stolitsy-v-moskve",
+      "remont-v-luzhniki-collection-v-moskve",
     ]));
   });
 
@@ -50,9 +53,10 @@ describe("SEO blog content", () => {
 
   it("does not represent geo articles as proof of completed repair work", () => {
     const geoPosts = blogPosts.filter(post => post.category === "ЖК Москвы");
-    expect(geoPosts).toHaveLength(7);
+    expect(geoPosts).toHaveLength(10);
     for (const post of geoPosts) {
       expect(post.disclaimer).toMatch(/не подтверждает|не заменяет|не является/);
+      expect(post.residentialComplex).toBeTruthy();
     }
   });
 });

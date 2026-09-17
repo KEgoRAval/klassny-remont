@@ -1,6 +1,8 @@
-import { ArrowLeft, ArrowRight, ArrowUpRight, Clock3, FileText, Phone } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Clock3, FileText, Phone } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { blogPosts, getBlogPost, getRelatedPosts, type BlogPost } from "@/content/blog";
+import { trpc } from "@/lib/trpc";
 import NotFound from "@/pages/NotFound";
 
 function Brand({ dark = false }: { dark?: boolean }) {
@@ -96,12 +98,50 @@ function ArticleTable({ table }: { table: NonNullable<BlogPost["sections"][numbe
   return <div className="article-table-scroll"><table className="article-table"><thead><tr>{table.headers.map(header => <th key={header}>{header}</th>)}</tr></thead><tbody>{table.rows.map((row, index) => <tr key={`${row[0]}-${index}`}>{row.map(cell => <td key={cell}>{cell}</td>)}</tr>)}</tbody></table></div>;
 }
 
+const formatRubles = (value: number) => `${value.toLocaleString("ru-RU")} ₽`;
+
+function ComplexEstimateForm({ complexName }: { complexName: string }) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [area, setArea] = useState(90);
+  const [submitted, setSubmitted] = useState(false);
+  const workEstimate = area * 40_000;
+  const materialsEstimate = Math.round(workEstimate * 0.55);
+  const totalEstimate = workEstimate + materialsEstimate;
+  const submitLead = trpc.leads.submit.useMutation({
+    onSuccess: () => {
+      setSubmitted(true);
+      setPhone("");
+    },
+  });
+
+  if (submitted) {
+    return <section className="complex-estimate complex-estimate-success" aria-live="polite"><span className="complex-success-mark"><Check size={22} /></span><div><p className="blog-kicker">Заявка отправлена</p><h2>Спасибо, {name}.</h2><p>Параметры для {complexName} уже переданы команде. Свяжемся в течение 24 часов, уточним задачу и договоримся о замере.</p><button type="button" onClick={() => { setSubmitted(false); setName(""); setArea(90); }}>Рассчитать другую квартиру <ArrowRight size={16} /></button></div></section>;
+  }
+
+  return (
+    <section className="complex-estimate" aria-labelledby="complex-estimate-title" data-complex={complexName}>
+      <div className="complex-estimate-intro"><p className="blog-kicker">Расчёт по вашему объекту</p><h2 id="complex-estimate-title">Рассчитать стоимость<br /><i>ремонта в моём ЖК.</i></h2><p>Название комплекса уже подставлено: <b>{complexName}</b>. Оставьте контакты — подготовим предварительный расчёт за 24 часа.</p></div>
+      <form className="complex-estimate-form" onSubmit={(event) => { event.preventDefault(); submitLead.mutate({ name, phone, service: `Расчёт ремонта в ${complexName}`, area, materialLabel: "Рациональный", workEstimate, materialsEstimate, totalEstimate, source: "calculator" }); }}>
+        <div className="complex-name"><span>Ваш жилой комплекс</span><b>{complexName}</b></div>
+        <label className="complex-range-label">Площадь квартиры <output>{area} м²</output><input type="range" min="50" max="250" step="5" value={area} onChange={(event) => setArea(Number(event.target.value))} style={{ "--value": `${((area - 50) / 200) * 100}%` } as React.CSSProperties} disabled={submitLead.isPending} /><small>50 м² <span>250 м²</span></small></label>
+        <div className="complex-estimate-price"><span>Ориентир по работам</span><b>от {formatRubles(workEstimate)}</b><small>Материалы и индивидуальные решения — отдельной строкой после замера.</small></div>
+        <div className="complex-fields"><label>Ваше имя<input value={name} onChange={(event) => setName(event.target.value)} disabled={submitLead.isPending} required minLength={2} placeholder="Как к вам обращаться" /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} disabled={submitLead.isPending} required minLength={6} placeholder="+7 (___) ___‑__‑__" /></label></div>
+        <button className={submitLead.isPending ? "blog-button complex-submit form-submit-loading" : "blog-button complex-submit"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <><span className="button-loader" aria-hidden="true"><i></i><i></i><i></i></span>Отправляем заявку</> : <>Получить расчёт за 24 часа <ArrowRight size={17} /></>}</button>
+        {submitLead.isError && <p className="complex-form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
+        <small className="complex-privacy">Нажимая кнопку, вы соглашаетесь с обработкой персональных данных. Без спама — только ответ по вашему проекту.</small>
+      </form>
+    </section>
+  );
+}
+
 export function BlogArticle() {
   const { slug } = useParams<{ slug: string }>();
   const post = slug ? getBlogPost(slug) : undefined;
 
   if (!post) return <NotFound />;
   const related = getRelatedPosts(post.slug);
+  const complexName = post.residentialComplex ?? post.shortTitle.replace(/^Ремонт в /, "");
   return (
     <div className="blog-page article-page">
       <BlogHeader />
@@ -127,6 +167,7 @@ export function BlogArticle() {
               <section className="article-faq" aria-labelledby="article-faq-title"><p className="blog-kicker">Частые вопросы</p><h2 id="article-faq-title">Что ещё важно уточнить</h2>{post.faqs.map((faq, index) => <details open={index === 0} key={faq.question}><summary>{faq.question}<ArrowRight size={18} /></summary><p>{faq.answer}</p></details>)}</section>
               <section className="article-sources"><FileText size={20} /><div><h2>Источники и документы</h2><p>Ссылки приведены для самостоятельной проверки. Условия конкретного объекта всегда уточняются по актуальным документам.</p><ul>{post.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}<ArrowUpRight size={14} /></a></li>)}</ul></div></section>
               {post.disclaimer && <p className="article-disclaimer">{post.disclaimer}</p>}
+              {post.category === "ЖК Москвы" && <ComplexEstimateForm complexName={complexName} />}
             </div>
           </div>
         </article>

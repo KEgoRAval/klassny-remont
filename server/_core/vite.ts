@@ -35,7 +35,7 @@ const absolutizeStructuredData = (data: unknown, origin: string): unknown => {
 };
 
 function buildHeadTags(head: HeadMeta) {
-  const title = escapeHtml(compactText(head.title, 70) || siteName());
+  const title = escapeHtml(compactText(head.title, 90) || siteName());
   const description = escapeHtml(compactText(head.description.replace(/[#*_`~]+/g, ""), 200));
   const origin = canonicalOrigin();
   const canonicalUrl = origin && head.canonicalPath ? `${origin}${head.canonicalPath}` : "";

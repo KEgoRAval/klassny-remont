@@ -32,6 +32,7 @@ assert_contains "$blog" '<title>Блог о ремонте квартир в М�
 assert_contains "$blog" 'Сколько стоит ремонт квартиры в Москве в 2026 году' 'Blog index contains practical article'
 assert_contains "$blog" 'Ремонт в ЖК «ВЭРИ на Ботанической»' 'Blog index contains geo article'
 assert_contains "$blog" 'Ремонт в ЖК «ЗИЛАРТ»' 'Blog index contains additional geo article'
+assert_contains "$blog" 'Ремонт в Luzhniki Collection' 'Blog index contains requested geo article'
 assert_contains "$blog" 'rel="canonical" href="http://localhost:4101/blog"' 'Blog canonical is present'
 
 article="$(curl -fsS --compressed -A "$UA" "$BASE/blog/stoimost-remonta-kvartiry-v-moskve-2026")"
@@ -43,6 +44,12 @@ assert_contains "$article" '"@type":"BreadcrumbList"' 'Article breadcrumb schema
 assert_contains "$article" '"@id":"http://localhost:4101/blog/stoimost-remonta-kvartiry-v-moskve-2026#article"' 'Article schema uses canonical URLs'
 assert_contains "$article" 'rel="canonical" href="http://localhost:4101/blog/stoimost-remonta-kvartiry-v-moskve-2026"' 'Article canonical is present'
 
+sobytie_article="$(curl -fsS --compressed -A "$UA" "$BASE/blog/remont-v-zhk-sobytie-v-moskve")"
+assert_contains "$sobytie_article" '<title>Ремонт в ЖК «Событие»: особенности квартир в разных кварталах — Классный Ремонт</title>' 'Requested article title is present'
+assert_contains "$sobytie_article" 'Рассчитать стоимость' 'Requested article contains complex estimate form'
+assert_contains "$sobytie_article" 'ЖК «Событие»' 'Requested article auto-fills complex name'
+assert_contains "$sobytie_article" '"@type":"BlogPosting"' 'Requested article structured data is present'
+
 robots="$(curl -fsS "$BASE/robots.txt")"
 assert_contains "$robots" 'User-agent: YandexBot' 'Robots permits Yandex crawler'
 assert_contains "$robots" 'User-agent: PerplexityBot' 'Robots permits Perplexity crawler'
@@ -53,6 +60,7 @@ assert_contains "$sitemap" "<loc>$BASE/</loc>" 'Sitemap contains canonical home 
 assert_contains "$sitemap" "<loc>$BASE/blog</loc>" 'Sitemap contains blog index'
 assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-zhk-ever-v-moskve</loc>" 'Sitemap contains geo article'
 assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-zhk-zilart-v-moskve</loc>" 'Sitemap contains additional geo article'
+assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-luzhniki-collection-v-moskve</loc>" 'Sitemap contains requested geo article'
 
 llms="$(curl -fsS "$BASE/llms.txt")"
 assert_contains "$llms" 'ИП Бережной Егор Юрьевич' 'llms.txt contains legal entity'
@@ -62,6 +70,7 @@ assert_contains "$llms" 'Приёмка квартиры в новостройк
 llms_full="$(curl -fsS "$BASE/llms-full.txt")"
 assert_contains "$llms_full" 'ЖК «Остров»' 'llms-full.txt maps geo articles'
 assert_contains "$llms_full" 'ЖК «Ривер Парк Коломенское»' 'llms-full.txt maps new geo article'
+assert_contains "$llms_full" 'Luzhniki Collection' 'llms-full.txt maps requested geo article'
 
 pricing="$(curl -fsS "$BASE/pricing.md")"
 assert_contains "$pricing" 'Что входит в стоимость работ' 'Machine-readable price methodology is public'
