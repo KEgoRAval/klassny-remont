@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
+import { TELEGRAM_URL, WHATSAPP_URL } from "@/components/MessengerQuickActions";
 
 const images = {
   hero: "/manus-storage/hero-living-room_277d141a.jpg",
@@ -315,7 +316,7 @@ export default function Home() {
 
         <section id="contacts" className="contact-section">
           <div className="contact-panel">
-            <div className="contact-copy"><SectionLabel>Начнём с разговора</SectionLabel><h2>Покажите<br />вашу квартиру.<br /><i>Остальное — наша<br />работа.</i></h2><p>Оставьте контакты — обсудим задачу, назначим замер и пришлём предварительный расчёт за 24 часа.</p><div className="contact-direct"><a href="tel:+79779480672"><Phone size={18} />8 (977) 948‑06‑72</a><a href="https://t.me" target="_blank" rel="noreferrer"><Send size={18} />Telegram</a><a href="https://wa.me" target="_blank" rel="noreferrer"><MessageCircle size={18} />WhatsApp</a></div></div>
+            <div className="contact-copy"><SectionLabel>Начнём с разговора</SectionLabel><h2>Покажите<br />вашу квартиру.<br /><i>Остальное — наша<br />работа.</i></h2><p>Оставьте контакты — обсудим задачу, назначим замер и пришлём предварительный расчёт за 24 часа.</p><div className="contact-direct"><a href="tel:+79779480672"><Phone size={18} />8 (977) 948‑06‑72</a><a href={TELEGRAM_URL} target="_blank" rel="noreferrer"><Send size={18} />Telegram</a><a href={WHATSAPP_URL} target="_blank" rel="noreferrer"><MessageCircle size={18} />WhatsApp</a></div></div>
             <div className="contact-form-wrap">
               <form className="contact-form" onSubmit={submitContactForm}>
                 <label>Ваше имя<input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={submitContactLead.isPending} required placeholder="Как к вам обращаться" /></label>
@@ -333,7 +334,6 @@ export default function Home() {
 
       <footer><div className="footer-brand"><span className="brand-mark">КР</span><span><b>Классный</b><em>Ремонт</em></span></div><div className="footer-links"><a href="#projects">Портфолио</a><a href="#process">Процесс</a><a href="#prices">Цены</a><a href="/blog">Блог</a><a href="#contacts">Контакты</a></div><div className="legal-details" aria-label="Реквизиты индивидуального предпринимателя"><span>ИП Бережной Егор Юрьевич</span><div><small>ОГРНИП</small><b>321527500117786</b></div><div><small>ИНН</small><b>773166101203</b></div><div><small>ОКПО</small><b>2011448980</b></div></div><div className="privacy-links"><a href="/privacy-policy">Политика обработки персональных данных</a><a href="/personal-data-consent">Согласие на обработку данных</a></div><div className="footer-bottom"><span>© 2026 ИП Бережной Егор Юрьевич</span><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div></footer>
 
-      <div className="messengers"><a href="https://t.me" target="_blank" rel="noreferrer" aria-label="Написать в Telegram" className="telegram"><Send size={20} /></a><a href="https://wa.me" target="_blank" rel="noreferrer" aria-label="Написать в WhatsApp" className="whatsapp"><MessageCircle size={21} /></a></div>
       <LeadModal open={leadOpen} onClose={() => setLeadOpen(false)} onSuccess={showThankYou} calculator={calculator} />
       <ThankYouModal name={thankYouName} onClose={() => setThankYouName(null)} />
     </div>

@@ -26,15 +26,17 @@ for key in "${required[@]}"; do
     printf 'Missing required deployment environment variable: %s\n' "$key" >&2
     exit 1
   fi
-  printf '%s=%s\n' "$key" "$value" >> "$output"
+  escaped_value="${value//\\/\\\\}"
+  escaped_value="${escaped_value//\"/\\\"}"
+  printf '%s="%s"\n' "$key" "$escaped_value" >> "$output"
 done
 
 cat >> "$output" <<'EOF'
-NODE_ENV=production
-HOST=127.0.0.1
-PORT=3020
-CANONICAL_ORIGIN=http://89.117.149.68
-SITE_NAME=Классный Ремонт
+NODE_ENV="production"
+HOST="127.0.0.1"
+PORT="3020"
+CANONICAL_ORIGIN="https://krem.moscow"
+SITE_NAME="Классный Ремонт"
 EOF
 
 chmod 600 "$output"

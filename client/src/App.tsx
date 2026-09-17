@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { BlogArticle, BlogIndex } from "./pages/Blog";
 import { PersonalDataConsentPage, PrivacyPolicy } from "./pages/Legal";
 import { CookieConsent } from "./components/CookieConsent";
+import { MessengerQuickActions } from "./components/MessengerQuickActions";
 import Home from "./pages/Home";
 
 function Router() {
@@ -43,6 +44,7 @@ function App() {
           <Toaster />
           <Router />
           <CookieConsent />
+          <MessengerQuickActions />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
