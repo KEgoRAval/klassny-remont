@@ -25,6 +25,15 @@ const compactText = (value: string, max: number) => {
 const canonicalOrigin = () => (process.env.CANONICAL_ORIGIN ?? "").replace(/\/+$/, "");
 const siteName = () => process.env.SITE_NAME ?? "Классный Ремонт";
 
+const absolutizeStructuredData = (data: unknown, origin: string): unknown => {
+  if (typeof data === "string") return origin && data.startsWith("/") ? `${origin}${data}` : data;
+  if (Array.isArray(data)) return data.map(value => absolutizeStructuredData(value, origin));
+  if (data && typeof data === "object") {
+    return Object.fromEntries(Object.entries(data).map(([key, value]) => [key, absolutizeStructuredData(value, origin)]));
+  }
+  return data;
+};
+
 function buildHeadTags(head: HeadMeta) {
   const title = escapeHtml(compactText(head.title, 70) || siteName());
   const description = escapeHtml(compactText(head.description.replace(/[#*_`~]+/g, ""), 200));
@@ -53,6 +62,15 @@ function buildHeadTags(head: HeadMeta) {
     tags.push(`<meta property="og:image" content="${escapeHtml(image)}" />`);
     tags.push(`<meta property="og:image:alt" content="${escapeHtml(head.ogImageAlt ?? "Классный Ремонт — ремонт квартир в Москве")}" />`);
     tags.push(`<meta name="twitter:image" content="${escapeHtml(image)}" />`);
+  }
+  if (head.ogType === "article" && head.publishedAt) {
+    tags.push(`<meta property="article:published_time" content="${escapeHtml(head.publishedAt)}" />`);
+  }
+  if (head.ogType === "article" && head.modifiedAt) {
+    tags.push(`<meta property="article:modified_time" content="${escapeHtml(head.modifiedAt)}" />`);
+  }
+  if (head.structuredData) {
+    tags.push(`<script type="application/ld+json">${JSON.stringify(absolutizeStructuredData(head.structuredData, origin)).replace(/</g, "\\u003c")}</script>`);
   }
   return tags.join("\n");
 }

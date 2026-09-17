@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
-const metadata = readFileSync(resolve(process.cwd(), "client/index.html"), "utf8");
+const seo = readFileSync(resolve(process.cwd(), "client/src/ssr/prefetch.ts"), "utf8");
 const llms = readFileSync(resolve(process.cwd(), "client/public/llms.txt"), "utf8");
 const pricing = readFileSync(resolve(process.cwd(), "client/public/pricing.md"), "utf8");
 
@@ -41,12 +41,12 @@ describe("lead form feedback", () => {
   it("uses the supplied phone number for calls and local business metadata", () => {
     expect(source).toContain('href="tel:+79779480672"');
     expect(source).toContain("8 (977) 948‑06‑72");
-    expect(metadata).toContain('"telephone":"+7 977 948-06-72"');
+    expect(seo).toContain('telephone: "+7 977 948-06-72"');
   });
 
   it("displays the supplied sole proprietor registration details", () => {
     expect(source).toContain("ИП Бережной Егор Юрьевич");
-    expect(metadata).toContain('"legalName":"ИП Бережной Егор Юрьевич"');
+    expect(seo).toContain('legalName: "ИП Бережной Егор Юрьевич"');
     expect(source).toContain("ОГРНИП");
     expect(source).toContain("321527500117786");
     expect(source).toContain("ИНН");
@@ -88,9 +88,9 @@ describe("lead form feedback", () => {
     expect(source).toContain("Сколько стоит ремонт квартиры в Москве?");
     expect(source).toContain("Можно ли увидеть ваш объект до договора?");
     expect(source).toContain("Как контролируется смета и изменения по ходу работ?");
-    expect(metadata).toContain('"@type":"FAQPage"');
-    expect(metadata).toContain('"HomeAndConstructionBusiness"');
-    expect(metadata).toContain('"areaServed"');
+    expect(seo).toContain('"@type": "FAQPage"');
+    expect(seo).toContain('"HomeAndConstructionBusiness"');
+    expect(seo).toContain('areaServed');
   });
 
   it("provides machine-readable pricing and company information", () => {

@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import { blogPosts } from "../../client/src/content/blog";
 
 const siteOrigin = () => (process.env.CANONICAL_ORIGIN ?? "").replace(/\/+$/, "");
 
@@ -40,9 +41,15 @@ export function registerSeoRoutes(app: Express) {
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
+    const urls = [
+      { path: "/", lastmod: today, priority: "1.0" },
+      { path: "/blog", lastmod: today, priority: "0.9" },
+      ...blogPosts.map(post => ({ path: post.path, lastmod: post.modifiedAt, priority: "0.8" })),
+    ];
+    const nodes = urls.map(item => `  <url><loc>${origin}${item.path}</loc><lastmod>${item.lastmod}</lastmod><changefreq>monthly</changefreq><priority>${item.priority}</priority></url>`).join("\n");
     res.type("application/xml").set("Cache-Control", "public, max-age=3600").send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${origin}/</loc><lastmod>${today}</lastmod></url>
+${nodes}
 </urlset>`);
   });
 }

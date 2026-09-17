@@ -27,6 +27,21 @@ assert_contains "$home" 'property="og:image" content="http://localhost:4101/manu
 assert_contains "$home" 'rel="canonical" href="http://localhost:4101/"' 'Canonical is present'
 assert_contains "$home" '"@type":"FAQPage"' 'FAQ JSON-LD is present'
 
+blog="$(curl -fsS --compressed -A "$UA" "$BASE/blog")"
+assert_contains "$blog" '<title>Блог о ремонте квартир в Москве — Классный Ремонт</title>' 'Blog title is present'
+assert_contains "$blog" 'Сколько стоит ремонт квартиры в Москве в 2026 году' 'Blog index contains practical article'
+assert_contains "$blog" 'Ремонт в ЖК «ВЭРИ на Ботанической»' 'Blog index contains geo article'
+assert_contains "$blog" 'rel="canonical" href="http://localhost:4101/blog"' 'Blog canonical is present'
+
+article="$(curl -fsS --compressed -A "$UA" "$BASE/blog/stoimost-remonta-kvartiry-v-moskve-2026")"
+assert_contains "$article" '<title>Сколько стоит ремонт квартиры в Москве в 2026 году — Классный Ремонт</title>' 'Article title is present'
+assert_contains "$article" 'Что означает «от 40 000 ₽/м²»' 'Article body is server-rendered'
+assert_contains "$article" 'property="article:published_time" content="2026-09-17"' 'Article publication metadata is present'
+assert_contains "$article" '"@type":"BlogPosting"' 'Article structured data is present'
+assert_contains "$article" '"@type":"BreadcrumbList"' 'Article breadcrumb schema is present'
+assert_contains "$article" '"@id":"http://localhost:4101/blog/stoimost-remonta-kvartiry-v-moskve-2026#article"' 'Article schema uses canonical URLs'
+assert_contains "$article" 'rel="canonical" href="http://localhost:4101/blog/stoimost-remonta-kvartiry-v-moskve-2026"' 'Article canonical is present'
+
 robots="$(curl -fsS "$BASE/robots.txt")"
 assert_contains "$robots" 'User-agent: YandexBot' 'Robots permits Yandex crawler'
 assert_contains "$robots" 'User-agent: PerplexityBot' 'Robots permits Perplexity crawler'
@@ -34,10 +49,16 @@ assert_contains "$robots" "Sitemap: $BASE/sitemap.xml" 'Robots links sitemap'
 
 sitemap="$(curl -fsS "$BASE/sitemap.xml")"
 assert_contains "$sitemap" "<loc>$BASE/</loc>" 'Sitemap contains canonical home URL'
+assert_contains "$sitemap" "<loc>$BASE/blog</loc>" 'Sitemap contains blog index'
+assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-zhk-ever-v-moskve</loc>" 'Sitemap contains geo article'
 
 llms="$(curl -fsS "$BASE/llms.txt")"
 assert_contains "$llms" 'ИП Бережной Егор Юрьевич' 'llms.txt contains legal entity'
 assert_contains "$llms" 'от 40 000 ₽/м²' 'llms.txt contains price threshold'
+assert_contains "$llms" 'Приёмка квартиры в новостройке' 'llms.txt links blog knowledge'
+
+llms_full="$(curl -fsS "$BASE/llms-full.txt")"
+assert_contains "$llms_full" 'ЖК «Остров»' 'llms-full.txt maps geo articles'
 
 pricing="$(curl -fsS "$BASE/pricing.md")"
 assert_contains "$pricing" 'Что входит в стоимость работ' 'Machine-readable price methodology is public'
