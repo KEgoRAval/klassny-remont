@@ -275,7 +275,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer><div className="footer-brand"><span className="brand-mark">КР</span><span><b>Классный</b><em>Ремонт</em></span></div><div className="footer-links"><a href="#projects">Портфолио</a><a href="#process">Процесс</a><a href="#prices">Цены</a><a href="#contacts">Контакты</a></div><div className="footer-bottom"><span>© 2026 ИП «Классный Ремонт»</span><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div></footer>
+      <footer><div className="footer-brand"><span className="brand-mark">КР</span><span><b>Классный</b><em>Ремонт</em></span></div><div className="footer-links"><a href="#projects">Портфолио</a><a href="#process">Процесс</a><a href="#prices">Цены</a><a href="#contacts">Контакты</a></div><div className="legal-details" aria-label="Реквизиты индивидуального предпринимателя"><span>Реквизиты ИП</span><div><small>ОГРНИП</small><b>321527500117786</b></div><div><small>ИНН</small><b>773166101203</b></div><div><small>ОКПО</small><b>2011448980</b></div></div><div className="footer-bottom"><span>© 2026 ИП «Классный Ремонт»</span><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div></footer>
 
       <div className="messengers"><a href="https://t.me" target="_blank" rel="noreferrer" aria-label="Написать в Telegram" className="telegram"><Send size={20} /></a><a href="https://wa.me" target="_blank" rel="noreferrer" aria-label="Написать в WhatsApp" className="whatsapp"><MessageCircle size={21} /></a></div>
       <LeadModal open={leadOpen} onClose={() => setLeadOpen(false)} onSuccess={showThankYou} calculator={calculator} />

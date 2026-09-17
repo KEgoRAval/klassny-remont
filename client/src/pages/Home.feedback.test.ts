@@ -41,4 +41,13 @@ describe("lead form feedback", () => {
     expect(source).toContain("8 (977) 948‑06‑72");
     expect(metadata).toContain('"telephone":"+7 977 948-06-72"');
   });
+
+  it("displays the supplied sole proprietor registration details", () => {
+    expect(source).toContain("ОГРНИП");
+    expect(source).toContain("321527500117786");
+    expect(source).toContain("ИНН");
+    expect(source).toContain("773166101203");
+    expect(source).toContain("ОКПО");
+    expect(source).toContain("2011448980");
+  });
 });
