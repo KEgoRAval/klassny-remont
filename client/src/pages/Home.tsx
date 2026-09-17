@@ -157,7 +157,7 @@ export default function Home() {
           <a href="#contacts" onClick={() => setMenuOpen(false)}>Контакты</a>
         </nav>
         <div className="topbar-actions">
-          <a className="header-phone" href="tel:+74951234567"><Phone size={15} /> +7 495 123 45 67</a>
+          <a className="header-phone" href="tel:+79779480672"><Phone size={15} /> 8 (977) 948‑06‑72</a>
           <button className="small-cta" onClick={openLead}>Оставить заявку <ArrowDownRight size={16} /></button>
           <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label="Открыть меню">{menuOpen ? <X /> : <Menu />}</button>
         </div>
@@ -267,7 +267,7 @@ export default function Home() {
 
         <section id="contacts" className="contact-section">
           <div className="contact-panel">
-            <div className="contact-copy"><SectionLabel>Начнём с разговора</SectionLabel><h2>Покажите<br />вашу квартиру.<br /><i>Остальное — наша<br />работа.</i></h2><p>Оставьте контакты — обсудим задачу, назначим замер и пришлём предварительный расчёт за 24 часа.</p><div className="contact-direct"><a href="tel:+74951234567"><Phone size={18} />+7 495 123 45 67</a><a href="https://t.me" target="_blank" rel="noreferrer"><Send size={18} />Telegram</a><a href="https://wa.me" target="_blank" rel="noreferrer"><MessageCircle size={18} />WhatsApp</a></div></div>
+            <div className="contact-copy"><SectionLabel>Начнём с разговора</SectionLabel><h2>Покажите<br />вашу квартиру.<br /><i>Остальное — наша<br />работа.</i></h2><p>Оставьте контакты — обсудим задачу, назначим замер и пришлём предварительный расчёт за 24 часа.</p><div className="contact-direct"><a href="tel:+79779480672"><Phone size={18} />8 (977) 948‑06‑72</a><a href="https://t.me" target="_blank" rel="noreferrer"><Send size={18} />Telegram</a><a href="https://wa.me" target="_blank" rel="noreferrer"><MessageCircle size={18} />WhatsApp</a></div></div>
             <div className="contact-form-wrap">
               <form className="contact-form" onSubmit={(e) => { e.preventDefault(); submitContactLead.mutate({ name: contactName, phone: contactPhone, service: contactService, source: "contact", ...calculator }); }}><label>Ваше имя<input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={submitContactLead.isPending} required placeholder="Как к вам обращаться" /></label><label>Телефон<input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={submitContactLead.isPending} required placeholder="+7 (___) ___-__-__" /></label><label>Что планируете?<select value={contactService} onChange={(e) => setContactService(e.target.value)} disabled={submitContactLead.isPending} required><option value="" disabled>Выберите вариант</option><option>Ремонт квартиры под ключ</option><option>Дизайн-проект + ремонт</option><option>Инженерные системы</option><option>Нужна консультация</option></select></label><button type="submit" disabled={submitContactLead.isPending} className={submitContactLead.isPending ? "button button-brass full-width form-submit-loading" : "button button-brass full-width"}>{submitContactLead.isPending ? <SendingContent label="Заявка отправляется" /> : <>Отправить заявку <ArrowRight size={18} /></>}</button>{submitContactLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}<small>Без спама. Только ответ по вашему проекту.</small></form>
             </div>

@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
+const metadata = readFileSync(resolve(process.cwd(), "client/index.html"), "utf8");
 
 describe("lead form feedback", () => {
   it("shows sending content in both lead submission paths", () => {
@@ -33,5 +34,11 @@ describe("lead form feedback", () => {
     expect(source).toContain("на объект в работе.");
     expect(source).not.toContain("Познакомиться с командой");
     expect(source).not.toContain(">Все проекты <");
+  });
+
+  it("uses the supplied phone number for calls and local business metadata", () => {
+    expect(source).toContain('href="tel:+79779480672"');
+    expect(source).toContain("8 (977) 948‑06‑72");
+    expect(metadata).toContain('"telephone":"+7 977 948-06-72"');
   });
 });
