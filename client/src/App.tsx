@@ -6,6 +6,8 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { Head } from "./components/Head";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { BlogArticle, BlogIndex } from "./pages/Blog";
+import { PersonalDataConsentPage, PrivacyPolicy } from "./pages/Legal";
+import { CookieConsent } from "./components/CookieConsent";
 import Home from "./pages/Home";
 
 function Router() {
@@ -15,6 +17,8 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/blog"} component={BlogIndex} />
       <Route path={"/blog/:slug"} component={BlogArticle} />
+      <Route path={"/privacy-policy"} component={PrivacyPolicy} />
+      <Route path={"/personal-data-consent"} component={PersonalDataConsentPage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -38,6 +42,7 @@ function App() {
           <Head />
           <Toaster />
           <Router />
+          <CookieConsent />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

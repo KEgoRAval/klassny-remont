@@ -8,6 +8,10 @@ export type LeadNotification = {
   materialsEstimate: number;
   totalEstimate: number;
   source: "calculator" | "contact";
+  personalDataConsent: true;
+  telegramConsent: true;
+  consentVersion: "2026-09-17";
+  policyVersion: "2026-09-17";
 };
 
 const escapeHtml = (value: string) =>
@@ -32,6 +36,8 @@ export function formatLeadMessage(lead: LeadNotification): string {
     `<b>Работы:</b> от ${formatRubles(lead.workEstimate)}`,
     `<b>Материалы:</b> от ${formatRubles(lead.materialsEstimate)}`,
     `<b>Ориентир:</b> от ${formatRubles(lead.totalEstimate)}`,
+    "",
+    `<b>Согласия:</b> обработка ПД и передача в Telegram — получены (${lead.consentVersion})`,
   ].join("\n");
 }
 

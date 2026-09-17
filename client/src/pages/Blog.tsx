@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Clock3, FileText, Phone } f
 import { Link, useParams } from "wouter";
 import { blogPosts, getBlogPost, getRelatedPosts, type BlogPost } from "@/content/blog";
 import { trpc } from "@/lib/trpc";
+import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import NotFound from "@/pages/NotFound";
 
 function Brand({ dark = false }: { dark?: boolean }) {
@@ -36,7 +37,7 @@ function BlogFooter() {
     <footer className="blog-footer">
       <div><Brand /><p>Ремонт квартир бизнес- и премиум‑класса в Москве. Смета, график и контроль — до старта работ.</p></div>
       <div className="blog-footer-links"><Link href="/blog">Все статьи</Link><a href="/#prices">Расчёт стоимости</a><a href="/#contacts">Оставить заявку</a></div>
-      <div className="blog-footer-legal"><b>ИП Бережной Егор Юрьевич</b><span>ОГРНИП 321527500117786 · ИНН 773166101203</span></div>
+      <div className="blog-footer-legal"><b>ИП Бережной Егор Юрьевич</b><span>ОГРНИП 321527500117786 · ИНН 773166101203</span><Link href="/privacy-policy">Политика обработки данных</Link><Link href="/personal-data-consent">Согласие на обработку</Link></div>
     </footer>
   );
 }
@@ -105,6 +106,8 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
   const [phone, setPhone] = useState("");
   const [area, setArea] = useState(90);
   const [submitted, setSubmitted] = useState(false);
+  const [personalDataConsent, setPersonalDataConsent] = useState(false);
+  const [telegramConsent, setTelegramConsent] = useState(false);
   const workEstimate = area * 40_000;
   const materialsEstimate = Math.round(workEstimate * 0.55);
   const totalEstimate = workEstimate + materialsEstimate;
@@ -112,6 +115,8 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
     onSuccess: () => {
       setSubmitted(true);
       setPhone("");
+      setPersonalDataConsent(false);
+      setTelegramConsent(false);
     },
   });
 
@@ -122,14 +127,14 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
   return (
     <section className="complex-estimate" aria-labelledby="complex-estimate-title" data-complex={complexName}>
       <div className="complex-estimate-intro"><p className="blog-kicker">Расчёт по вашему объекту</p><h2 id="complex-estimate-title">Рассчитать стоимость<br /><i>ремонта в моём ЖК.</i></h2><p>Название комплекса уже подставлено: <b>{complexName}</b>. Оставьте контакты — подготовим предварительный расчёт за 24 часа.</p></div>
-      <form className="complex-estimate-form" onSubmit={(event) => { event.preventDefault(); submitLead.mutate({ name, phone, service: `Расчёт ремонта в ${complexName}`, area, materialLabel: "Рациональный", workEstimate, materialsEstimate, totalEstimate, source: "calculator" }); }}>
+      <form className="complex-estimate-form" onSubmit={(event) => { event.preventDefault(); if (!personalDataConsent || !telegramConsent) return; submitLead.mutate({ name, phone, service: `Расчёт ремонта в ${complexName}`, area, materialLabel: "Рациональный", workEstimate, materialsEstimate, totalEstimate, source: "calculator", personalDataConsent, telegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION }); }}>
         <div className="complex-name"><span>Ваш жилой комплекс</span><b>{complexName}</b></div>
         <label className="complex-range-label">Площадь квартиры <output>{area} м²</output><input type="range" min="50" max="250" step="5" value={area} onChange={(event) => setArea(Number(event.target.value))} style={{ "--value": `${((area - 50) / 200) * 100}%` } as React.CSSProperties} disabled={submitLead.isPending} /><small>50 м² <span>250 м²</span></small></label>
         <div className="complex-estimate-price"><span>Ориентир по работам</span><b>от {formatRubles(workEstimate)}</b><small>Материалы и индивидуальные решения — отдельной строкой после замера.</small></div>
         <div className="complex-fields"><label>Ваше имя<input value={name} onChange={(event) => setName(event.target.value)} disabled={submitLead.isPending} required minLength={2} placeholder="Как к вам обращаться" /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} disabled={submitLead.isPending} required minLength={6} placeholder="+7 (___) ___‑__‑__" /></label></div>
+        <PersonalDataConsent formId={`complex-estimate-${complexName.replaceAll(" ", "-").replaceAll("«", "").replaceAll("»", "")}`} personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
         <button className={submitLead.isPending ? "blog-button complex-submit form-submit-loading" : "blog-button complex-submit"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <><span className="button-loader" aria-hidden="true"><i></i><i></i><i></i></span>Отправляем заявку</> : <>Получить расчёт за 24 часа <ArrowRight size={17} /></>}</button>
         {submitLead.isError && <p className="complex-form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
-        <small className="complex-privacy">Нажимая кнопку, вы соглашаетесь с обработкой персональных данных. Без спама — только ответ по вашему проекту.</small>
       </form>
     </section>
   );

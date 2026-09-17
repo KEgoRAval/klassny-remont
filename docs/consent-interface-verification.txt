@@ -1,0 +1,9 @@
+Browser review, 17 September 2026:
+- Home contact form includes two independently unticked checkboxes: processing consent and Telegram transfer consent.
+- Both controls link to the policy and full consent text. Footer exposes both legal documents.
+- Cookie preferences notice is visible before any saved user choice, offering a rejection option and a separate analytics opt-in.
+- Project health reports no language-server or TypeScript errors.
+
+Follow-up validation: the DOM confirms both homepage checkboxes are initially unchecked and required; the contact form is invalid before consent and required fields are completed. No analytics script is present before an affirmative cookie choice. The public policy page renders the operator identity, separate Telegram transfer disclosure, cookies settings action, and withdrawal route by telephone.
+
+Resource verification: the privacy policy page exposes no Google or gstatic font links, includes self-hosted font sources from site storage, declares noindex, shows the cookie banner before a decision, and has no analytics script loaded before affirmative consent.

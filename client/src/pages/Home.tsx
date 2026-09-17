@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 
 const images = {
   hero: "/manus-storage/hero-living-room_277d141a.jpg",
@@ -83,13 +84,22 @@ function ThankYouModal({ name, onClose }: { name: string | null; onClose: () => 
 function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; onClose: () => void; onSuccess: (name: string) => void; calculator: CalculatorDetails }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [personalDataConsent, setPersonalDataConsent] = useState(false);
+  const [telegramConsent, setTelegramConsent] = useState(false);
   const submitLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
       onSuccess(name);
       setName("");
       setPhone("");
+      setPersonalDataConsent(false);
+      setTelegramConsent(false);
     },
   });
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!personalDataConsent || !telegramConsent) return;
+    submitLead.mutate({ name, phone, service: "Запись на замер", source: "calculator", ...calculator, personalDataConsent, telegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION });
+  };
 
   if (!open) return null;
   return (
@@ -99,12 +109,12 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
         <p className="eyebrow">Первый шаг к ремонту без сюрпризов</p>
         <h2 id="modal-title">Запишитесь на замер</h2>
         <p className="modal-copy">Обсудим задачу, подскажем реалистичный бюджет и подготовим предварительный расчёт за 24 часа.</p>
-        <form onSubmit={(e) => { e.preventDefault(); submitLead.mutate({ name, phone, service: "Запись на замер", source: "calculator", ...calculator }); }} className="modal-form">
+        <form onSubmit={handleSubmit} className="modal-form">
           <label>Как к вам обращаться<input value={name} onChange={(e) => setName(e.target.value)} disabled={submitLead.isPending} required placeholder="Ваше имя" /></label>
           <label>Телефон<input value={phone} onChange={(e) => setPhone(e.target.value)} disabled={submitLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
+          <PersonalDataConsent formId="lead-modal" personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
           <button className={submitLead.isPending ? "button button-brass form-submit-loading" : "button button-brass"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <SendingContent label="Отправляем заявку" /> : <>Получить расчёт <ArrowRight size={17} /></>}</button>
           {submitLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
-          <small>Нажимая кнопку, вы соглашаетесь с обработкой персональных данных.</small>
         </form>
       </div>
     </div>
@@ -119,6 +129,8 @@ export default function Home() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactService, setContactService] = useState("");
+  const [contactPersonalDataConsent, setContactPersonalDataConsent] = useState(false);
+  const [contactTelegramConsent, setContactTelegramConsent] = useState(false);
   const workRate = 40_000;
   const materialsRatio = 0.55;
   const workEstimate = area * workRate;
@@ -135,8 +147,15 @@ export default function Home() {
       setContactName("");
       setContactPhone("");
       setContactService("");
+      setContactPersonalDataConsent(false);
+      setContactTelegramConsent(false);
     },
   });
+  const submitContactForm = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!contactPersonalDataConsent || !contactTelegramConsent) return;
+    submitContactLead.mutate({ name: contactName, phone: contactPhone, service: contactService, source: "contact", ...calculator, personalDataConsent: contactPersonalDataConsent, telegramConsent: contactTelegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION });
+  };
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setLeadOpen(false); setMenuOpen(false); } };
@@ -285,13 +304,21 @@ export default function Home() {
           <div className="contact-panel">
             <div className="contact-copy"><SectionLabel>Начнём с разговора</SectionLabel><h2>Покажите<br />вашу квартиру.<br /><i>Остальное — наша<br />работа.</i></h2><p>Оставьте контакты — обсудим задачу, назначим замер и пришлём предварительный расчёт за 24 часа.</p><div className="contact-direct"><a href="tel:+79779480672"><Phone size={18} />8 (977) 948‑06‑72</a><a href="https://t.me" target="_blank" rel="noreferrer"><Send size={18} />Telegram</a><a href="https://wa.me" target="_blank" rel="noreferrer"><MessageCircle size={18} />WhatsApp</a></div></div>
             <div className="contact-form-wrap">
-              <form className="contact-form" onSubmit={(e) => { e.preventDefault(); submitContactLead.mutate({ name: contactName, phone: contactPhone, service: contactService, source: "contact", ...calculator }); }}><label>Ваше имя<input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={submitContactLead.isPending} required placeholder="Как к вам обращаться" /></label><label>Телефон<input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={submitContactLead.isPending} required placeholder="+7 (___) ___-__-__" /></label><label>Что планируете?<select value={contactService} onChange={(e) => setContactService(e.target.value)} disabled={submitContactLead.isPending} required><option value="" disabled>Выберите вариант</option><option>Ремонт квартиры под ключ</option><option>Дизайн-проект + ремонт</option><option>Инженерные системы</option><option>Нужна консультация</option></select></label><button type="submit" disabled={submitContactLead.isPending} className={submitContactLead.isPending ? "button button-brass full-width form-submit-loading" : "button button-brass full-width"}>{submitContactLead.isPending ? <SendingContent label="Заявка отправляется" /> : <>Отправить заявку <ArrowRight size={18} /></>}</button>{submitContactLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}<small>Без спама. Только ответ по вашему проекту.</small></form>
+              <form className="contact-form" onSubmit={submitContactForm}>
+                <label>Ваше имя<input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={submitContactLead.isPending} required placeholder="Как к вам обращаться" /></label>
+                <label>Телефон<input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={submitContactLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
+                <label>Что планируете?<select value={contactService} onChange={(e) => setContactService(e.target.value)} disabled={submitContactLead.isPending} required><option value="" disabled>Выберите вариант</option><option>Ремонт квартиры под ключ</option><option>Дизайн-проект + ремонт</option><option>Инженерные системы</option><option>Нужна консультация</option></select></label>
+                <PersonalDataConsent formId="contact-form" personalDataConsent={contactPersonalDataConsent} telegramConsent={contactTelegramConsent} disabled={submitContactLead.isPending} onPersonalDataConsentChange={setContactPersonalDataConsent} onTelegramConsentChange={setContactTelegramConsent} />
+                <button type="submit" disabled={submitContactLead.isPending} className={submitContactLead.isPending ? "button button-brass full-width form-submit-loading" : "button button-brass full-width"}>{submitContactLead.isPending ? <SendingContent label="Заявка отправляется" /> : <>Отправить заявку <ArrowRight size={18} /></>}</button>
+                {submitContactLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
+                <small>Без рекламных рассылок. Только ответ по вашему проекту.</small>
+              </form>
             </div>
           </div>
         </section>
       </main>
 
-      <footer><div className="footer-brand"><span className="brand-mark">КР</span><span><b>Классный</b><em>Ремонт</em></span></div><div className="footer-links"><a href="#projects">Портфолио</a><a href="#process">Процесс</a><a href="#prices">Цены</a><a href="/blog">Блог</a><a href="#contacts">Контакты</a></div><div className="legal-details" aria-label="Реквизиты индивидуального предпринимателя"><span>ИП Бережной Егор Юрьевич</span><div><small>ОГРНИП</small><b>321527500117786</b></div><div><small>ИНН</small><b>773166101203</b></div><div><small>ОКПО</small><b>2011448980</b></div></div><div className="footer-bottom"><span>© 2026 ИП Бережной Егор Юрьевич</span><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div></footer>
+      <footer><div className="footer-brand"><span className="brand-mark">КР</span><span><b>Классный</b><em>Ремонт</em></span></div><div className="footer-links"><a href="#projects">Портфолио</a><a href="#process">Процесс</a><a href="#prices">Цены</a><a href="/blog">Блог</a><a href="#contacts">Контакты</a></div><div className="legal-details" aria-label="Реквизиты индивидуального предпринимателя"><span>ИП Бережной Егор Юрьевич</span><div><small>ОГРНИП</small><b>321527500117786</b></div><div><small>ИНН</small><b>773166101203</b></div><div><small>ОКПО</small><b>2011448980</b></div></div><div className="privacy-links"><a href="/privacy-policy">Политика обработки персональных данных</a><a href="/personal-data-consent">Согласие на обработку данных</a></div><div className="footer-bottom"><span>© 2026 ИП Бережной Егор Юрьевич</span><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div></footer>
 
       <div className="messengers"><a href="https://t.me" target="_blank" rel="noreferrer" aria-label="Написать в Telegram" className="telegram"><Send size={20} /></a><a href="https://wa.me" target="_blank" rel="noreferrer" aria-label="Написать в WhatsApp" className="whatsapp"><MessageCircle size={21} /></a></div>
       <LeadModal open={leadOpen} onClose={() => setLeadOpen(false)} onSuccess={showThankYou} calculator={calculator} />

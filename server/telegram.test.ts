@@ -11,6 +11,10 @@ const sampleLead = {
   materialsEstimate: 2_200_000,
   totalEstimate: 6_200_000,
   source: "calculator" as const,
+  personalDataConsent: true as const,
+  telegramConsent: true as const,
+  consentVersion: "2026-09-17" as const,
+  policyVersion: "2026-09-17" as const,
 };
 
 describe("Telegram lead delivery", () => {
@@ -22,6 +26,7 @@ describe("Telegram lead delivery", () => {
     expect(message).toContain("100 м²");
     expect(message).toContain("Рациональный");
     expect(message).toContain("6 200 000 ₽");
+    expect(message).toContain("обработка ПД и передача в Telegram — получены (2026-09-17)");
   });
 
   it("preserves the auto-filled residential complex in an estimate request", () => {

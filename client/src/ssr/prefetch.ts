@@ -85,6 +85,24 @@ export function prefetchForPath(url: string): HeadMeta {
     };
   }
 
+  if (path === "/privacy-policy") {
+    return {
+      title: "Политика обработки персональных данных — Классный Ремонт",
+      description: "Политика обработки персональных данных ИП Бережного Егора Юрьевича для сайта Классный Ремонт.",
+      canonicalPath: "/privacy-policy",
+      noindex: true,
+    };
+  }
+
+  if (path === "/personal-data-consent") {
+    return {
+      title: "Согласие на обработку персональных данных — Классный Ремонт",
+      description: "Текст согласия на обработку персональных данных для форм сайта Классный Ремонт.",
+      canonicalPath: "/personal-data-consent",
+      noindex: true,
+    };
+  }
+
   const post = getBlogPostFromPath(path);
   if (post) {
     return {

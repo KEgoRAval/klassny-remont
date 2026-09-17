@@ -62,6 +62,15 @@ assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-zhk-ever-v-moskve</loc>" 'S
 assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-zhk-zilart-v-moskve</loc>" 'Sitemap contains additional geo article'
 assert_contains "$sitemap" "<loc>$BASE/blog/remont-v-luzhniki-collection-v-moskve</loc>" 'Sitemap contains requested geo article'
 
+privacy_policy="$(curl -fsS --compressed -A "$UA" "$BASE/privacy-policy")"
+assert_contains "$privacy_policy" '<title>Политика обработки персональных данных — Классный Ремонт</title>' 'Privacy policy title is present'
+assert_contains "$privacy_policy" 'name="robots" content="noindex, follow"' 'Privacy policy is noindex'
+assert_contains "$privacy_policy" 'Передача заявки через Telegram' 'Privacy policy discloses Telegram delivery'
+
+consent_page="$(curl -fsS --compressed -A "$UA" "$BASE/personal-data-consent")"
+assert_contains "$consent_page" '<title>Согласие на обработку персональных данных — Классный Ремонт</title>' 'Consent page title is present'
+assert_contains "$consent_page" 'Отдельное согласие на Telegram' 'Consent page is server-rendered'
+
 llms="$(curl -fsS "$BASE/llms.txt")"
 assert_contains "$llms" 'ИП Бережной Егор Юрьевич' 'llms.txt contains legal entity'
 assert_contains "$llms" 'от 40 000 ₽/м²' 'llms.txt contains price threshold'

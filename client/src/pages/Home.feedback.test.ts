@@ -22,6 +22,13 @@ describe("lead form feedback", () => {
     expect(source).toContain("<ThankYouModal name={thankYouName}");
   });
 
+  it("requires separate consent for processing and Telegram delivery in every homepage form", () => {
+    expect(source).toContain("<PersonalDataConsent formId=\"lead-modal\"");
+    expect(source).toContain("<PersonalDataConsent formId=\"contact-form\"");
+    expect(source).toContain("if (!personalDataConsent || !telegramConsent) return;");
+    expect(source).toContain("if (!contactPersonalDataConsent || !contactTelegramConsent) return;");
+  });
+
   it("uses a 40,000 ₽/m² rational renovation rate without exposing material ratios", () => {
     expect(source).toContain("const workRate = 40_000");
     expect(source).toContain("const materialsRatio = 0.55");

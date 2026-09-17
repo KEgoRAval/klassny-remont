@@ -5,8 +5,9 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { sendLeadToTelegram } from "./telegram";
+import { createLeadConsent } from "./db";
 
-const leadInput = z.object({
+export const leadInput = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(80),
   phone: z.string().trim().min(6, "Укажите телефон").max(40),
   service: z.string().trim().min(2).max(120),
@@ -16,6 +17,10 @@ const leadInput = z.object({
   materialsEstimate: z.number().int().min(0).max(50_000_000),
   totalEstimate: z.number().int().min(0).max(100_000_000),
   source: z.enum(["calculator", "contact"]),
+  personalDataConsent: z.literal(true, { error: "Необходимо согласие на обработку персональных данных" }),
+  telegramConsent: z.literal(true, { error: "Необходимо согласие на передачу заявки в Telegram" }),
+  consentVersion: z.literal("2026-09-17"),
+  policyVersion: z.literal("2026-09-17"),
 });
 
 export const appRouter = router({
@@ -32,6 +37,16 @@ export const appRouter = router({
     submit: publicProcedure.input(leadInput).mutation(async ({ input }) => {
       try {
         await sendLeadToTelegram(input);
+        await createLeadConsent({
+          name: input.name,
+          phone: input.phone,
+          service: input.service,
+          source: input.source,
+          personalDataConsent: 1,
+          telegramConsent: 1,
+          consentVersion: input.consentVersion,
+          policyVersion: input.policyVersion,
+        });
         return { success: true } as const;
       } catch (error) {
         console.error("[Lead notification]", error);

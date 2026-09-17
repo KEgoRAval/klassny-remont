@@ -25,4 +25,19 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/** Records a submitted site lead and the versioned consent attached to it. */
+export const leadConsents = mysqlTable("leadConsents", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 80 }).notNull(),
+  phone: varchar("phone", { length: 40 }).notNull(),
+  service: varchar("service", { length: 120 }).notNull(),
+  source: mysqlEnum("source", ["calculator", "contact"]).notNull(),
+  personalDataConsent: int("personalDataConsent").notNull(),
+  telegramConsent: int("telegramConsent").notNull(),
+  consentVersion: varchar("consentVersion", { length: 32 }).notNull(),
+  policyVersion: varchar("policyVersion", { length: 32 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LeadConsent = typeof leadConsents.$inferSelect;
+export type InsertLeadConsent = typeof leadConsents.$inferInsert;
