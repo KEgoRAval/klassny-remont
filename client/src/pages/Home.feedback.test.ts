@@ -51,11 +51,12 @@ describe("lead form feedback", () => {
     expect(source).toContain("2011448980");
   });
 
-  it("presents the ЖК Very visualizations as one transparent in-progress project", () => {
+  it("presents the ЖК Very project without status or visualization labels", () => {
     expect(source).toContain("ЖК Very");
-    expect(source).toContain("Проект в работе");
-    expect(source).toContain("Интерьерная визуализация");
     expect(source).toContain("51,4 м²");
+    expect(source).not.toContain("Проект в работе");
+    expect(source).not.toContain("Интерьерная визуализация");
+    expect(source).not.toContain("интерьерные визуализации");
     expect(source).toContain("very-enhanced-living_6019bd19.png");
     expect(source).toContain("very-enhanced-entry_0f41baa0.png");
     expect(source).toContain("very-enhanced-bedroom_262c2040.png");

@@ -28,10 +28,10 @@ const images = {
 };
 
 const projectCards = [
-  { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная · 51,4 м²", tag: "Проект в работе" },
-  { image: images.veryEntry, title: "ЖК Very", meta: "Прихожая · 51,4 м²", tag: "Интерьерная визуализация" },
-  { image: images.veryBedroom, title: "ЖК Very", meta: "Спальня · 51,4 м²", tag: "Интерьерная визуализация" },
-  { image: images.veryBathroom, title: "ЖК Very", meta: "Ванная · 51,4 м²", tag: "Интерьерная визуализация" },
+  { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная · 51,4 м²" },
+  { image: images.veryEntry, title: "ЖК Very", meta: "Прихожая · 51,4 м²" },
+  { image: images.veryBedroom, title: "ЖК Very", meta: "Спальня · 51,4 м²" },
+  { image: images.veryBathroom, title: "ЖК Very", meta: "Ванная · 51,4 м²" },
 ];
 
 const steps = [
@@ -215,12 +215,12 @@ export default function Home() {
               <article className={`project-card project-${index + 1}`} key={project.title}>
                 <img src={project.image} alt={project.title} loading="lazy" />
                 <div className="project-shade"></div>
-                <div className="project-meta"><span>{project.tag}</span><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
+                <div className="project-meta"><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
                 <div className="project-title"><h3>{project.title}</h3><p>{project.meta}</p></div>
               </article>
             ))}
           </div>
-          <div className="portfolio-note"><Ruler size={18} /><span>Квартира 51,4 м² · интерьерные визуализации согласованного проекта.</span><button onClick={openLead}>Обсудить похожий проект</button></div>
+          <div className="portfolio-note"><Ruler size={18} /><span>Квартира 51,4 м² · Москва.</span><button onClick={openLead}>Обсудить похожий проект</button></div>
         </section>
 
         <section id="process" className="process section-padding">
