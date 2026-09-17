@@ -67,4 +67,14 @@ describe("lead form feedback", () => {
     expect(source).toContain("key={project.image}");
     expect(source).not.toContain("key={project.title}");
   });
+
+  it("presents ЖК Ever as a distinct portfolio case", () => {
+    expect(source).toContain("const everProjectCards");
+    expect(source).toContain("ЖК Ever · Москва");
+    expect(source).toContain("Квартира 101,9 м² · Москва.");
+    expect(source).toContain("ever-enhanced-living_6eb96fe0.png");
+    expect(source).toContain("ever-enhanced-entry_054ed219.png");
+    expect(source).toContain("ever-enhanced-bedroom_5f368637.png");
+    expect(source).toContain("ever-enhanced-shower_967e9d92.png");
+  });
 });

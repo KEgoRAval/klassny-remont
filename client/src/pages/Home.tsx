@@ -25,13 +25,24 @@ const images = {
   veryEntry: "/manus-storage/very-enhanced-entry_0f41baa0.png",
   veryBedroom: "/manus-storage/very-enhanced-bedroom_262c2040.png",
   veryBathroom: "/manus-storage/very-enhanced-bathroom_c918e00d.png",
+  everLiving: "/manus-storage/ever-enhanced-living_6eb96fe0.png",
+  everEntry: "/manus-storage/ever-enhanced-entry_054ed219.png",
+  everBedroom: "/manus-storage/ever-enhanced-bedroom_5f368637.png",
+  everShower: "/manus-storage/ever-enhanced-shower_967e9d92.png",
 };
 
-const projectCards = [
+const veryProjectCards = [
   { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная · 51,4 м²" },
   { image: images.veryEntry, title: "ЖК Very", meta: "Прихожая · 51,4 м²" },
   { image: images.veryBedroom, title: "ЖК Very", meta: "Спальня · 51,4 м²" },
   { image: images.veryBathroom, title: "ЖК Very", meta: "Ванная · 51,4 м²" },
+];
+
+const everProjectCards = [
+  { image: images.everLiving, title: "ЖК Ever", meta: "Кухня-гостиная · 101,9 м²" },
+  { image: images.everEntry, title: "ЖК Ever", meta: "Прихожая · 101,9 м²" },
+  { image: images.everBedroom, title: "ЖК Ever", meta: "Мастер-спальня · 101,9 м²" },
+  { image: images.everShower, title: "ЖК Ever", meta: "Душевая · 101,9 м²" },
 ];
 
 const steps = [
@@ -210,17 +221,33 @@ export default function Home() {
           <div className="section-heading">
             <div><SectionLabel>ЖК Very · Москва</SectionLabel><h2>Проект, где<br /><i>всё продумано.</i></h2></div>
           </div>
-          <div className="project-grid">
-            {projectCards.map((project, index) => (
-              <article className={`project-card project-${index + 1}`} key={project.image}>
-                <img src={project.image} alt={project.title} loading="lazy" />
-                <div className="project-shade"></div>
-                <div className="project-meta"><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
-                <div className="project-title"><h3>{project.title}</h3><p>{project.meta}</p></div>
-              </article>
-            ))}
+          <div className="case-study">
+            <div className="project-grid">
+              {veryProjectCards.map((project, index) => (
+                <article className={`project-card project-${index + 1}`} key={project.image}>
+                  <img src={project.image} alt={project.title} loading="lazy" />
+                  <div className="project-shade"></div>
+                  <div className="project-meta"><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
+                  <div className="project-title"><h3>{project.title}</h3><p>{project.meta}</p></div>
+                </article>
+              ))}
+            </div>
+            <div className="portfolio-note"><Ruler size={18} /><span>Квартира 51,4 м² · Москва.</span><button onClick={openLead}>Обсудить похожий проект</button></div>
           </div>
-          <div className="portfolio-note"><Ruler size={18} /><span>Квартира 51,4 м² · Москва.</span><button onClick={openLead}>Обсудить похожий проект</button></div>
+          <div className="case-study case-study-ever">
+            <div className="section-heading case-study-heading"><div><SectionLabel>ЖК Ever · Москва</SectionLabel><h2>Интерьер<br /><i>с характером.</i></h2></div></div>
+            <div className="project-grid">
+              {everProjectCards.map((project, index) => (
+                <article className={`project-card project-${index + 1}`} key={project.image}>
+                  <img src={project.image} alt={project.title} loading="lazy" />
+                  <div className="project-shade"></div>
+                  <div className="project-meta"><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
+                  <div className="project-title"><h3>{project.title}</h3><p>{project.meta}</p></div>
+                </article>
+              ))}
+            </div>
+            <div className="portfolio-note"><Ruler size={18} /><span>Квартира 101,9 м² · Москва.</span><button onClick={openLead}>Обсудить похожий проект</button></div>
+          </div>
         </section>
 
         <section id="process" className="process section-padding">
