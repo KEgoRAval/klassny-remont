@@ -21,17 +21,17 @@ import { trpc } from "@/lib/trpc";
 
 const images = {
   hero: "/manus-storage/hero-living-room_277d141a.jpg",
-  terracotta: "/manus-storage/project-terracotta_4d77ae7e.jpg",
-  graphite: "/manus-storage/project-graphite_6414413b.jpg",
-  stone: "/manus-storage/project-stone_eca3418d.jpg",
-  cobalt: "/manus-storage/project-cobalt_953594e9.jpg",
+  veryLiving: "/manus-storage/very-enhanced-living_6019bd19.png",
+  veryEntry: "/manus-storage/very-enhanced-entry_0f41baa0.png",
+  veryBedroom: "/manus-storage/very-enhanced-bedroom_262c2040.png",
+  veryBathroom: "/manus-storage/very-enhanced-bathroom_c918e00d.png",
 };
 
 const projectCards = [
-  { image: images.terracotta, title: "Квартира на Пресне", meta: "118 м² · 7 месяцев", tag: "Современная классика" },
-  { image: images.graphite, title: "Пентхаус в Хамовниках", meta: "176 м² · 9 месяцев", tag: "Минимализм" },
-  { image: images.stone, title: "Квартира в Сколково", meta: "94 м² · 6 месяцев", tag: "Тёплый минимализм" },
-  { image: images.cobalt, title: "Апартаменты на Остоженке", meta: "132 м² · 8 месяцев", tag: "Контемпорари" },
+  { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная · 51,4 м²", tag: "Проект в работе" },
+  { image: images.veryEntry, title: "ЖК Very", meta: "Прихожая · 51,4 м²", tag: "Интерьерная визуализация" },
+  { image: images.veryBedroom, title: "ЖК Very", meta: "Спальня · 51,4 м²", tag: "Интерьерная визуализация" },
+  { image: images.veryBathroom, title: "ЖК Very", meta: "Ванная · 51,4 м²", tag: "Интерьерная визуализация" },
 ];
 
 const steps = [
@@ -208,7 +208,7 @@ export default function Home() {
 
         <section id="projects" className="projects section-padding">
           <div className="section-heading">
-            <div><SectionLabel>Реализованные проекты</SectionLabel><h2>Каждый объект —<br /><i>свой характер.</i></h2></div>
+            <div><SectionLabel>ЖК Very · Москва</SectionLabel><h2>Проект, где<br /><i>всё продумано.</i></h2></div>
           </div>
           <div className="project-grid">
             {projectCards.map((project, index) => (
@@ -220,7 +220,7 @@ export default function Home() {
               </article>
             ))}
           </div>
-          <div className="portfolio-note"><Ruler size={18} /><span>Хотите увидеть проекты, близкие по площади и стилю?</span><button onClick={openLead}>Подберём кейсы для вас</button></div>
+          <div className="portfolio-note"><Ruler size={18} /><span>Квартира 51,4 м² · интерьерные визуализации согласованного проекта.</span><button onClick={openLead}>Обсудить похожий проект</button></div>
         </section>
 
         <section id="process" className="process section-padding">
