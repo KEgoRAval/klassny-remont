@@ -33,4 +33,13 @@ describe("lead consent validation", () => {
   it("rejects an unknown consent version", () => {
     expect(leadInput.safeParse({ ...validLead, consentVersion: "2000-01-01" }).success).toBe(false);
   });
+
+  it("accepts a contact request with premium material settings", () => {
+    expect(leadInput.safeParse({
+      ...validLead,
+      service: "Консультация по смете",
+      materialLabel: "Премиум",
+      source: "contact",
+    }).success).toBe(true);
+  });
 });

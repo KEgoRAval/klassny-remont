@@ -15,8 +15,8 @@ describe("messenger quick actions", () => {
     expect(componentSource).toContain("https://t.me/Klrem1_bot?start=site");
     expect(componentSource).toContain('aria-label="Написать в Telegram"');
     expect(componentSource).toContain('aria-label="Написать в WhatsApp"');
-    expect(homeSource).toContain("TELEGRAM_URL");
-    expect(homeSource).toContain("WHATSAPP_URL");
+    expect(homeSource).toContain("https://t.me/Klrem1_bot?start=site");
+    expect(homeSource).toContain('href="tel:+79779480672"');
   });
 
   it("keeps the controls compact until focused or hovered", () => {
