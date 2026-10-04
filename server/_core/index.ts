@@ -8,6 +8,7 @@ import { registerLegacyStorageRedirects } from "./staticAssets";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { registerSeoRoutes } from "./seo";
+import { startLeadRetryLoop } from "../leadService";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -63,6 +64,7 @@ async function startServer() {
 
   server.listen(port, host, () => {
     console.log(`Server running on http://${host}:${port}/`);
+    startLeadRetryLoop();
   });
 }
 

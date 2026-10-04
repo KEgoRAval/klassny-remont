@@ -24,5 +24,6 @@ set +a
 
 [[ "$SITE_NAME" == "Классный Ремонт" ]]
 [[ "$CANONICAL_ORIGIN" == "https://krem.moscow" ]]
+[[ "${LEADS_JOURNAL_PATH:-}" == "/home/kegora/apps/klassny-remont/shared/leads/leads.jsonl" ]]
 [[ "$(stat -c '%a' "$temp_dir/.env")" == "600" ]]
 printf 'Deployment environment quoting verified.\n'
