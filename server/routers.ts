@@ -19,8 +19,9 @@ export const leadInput = z.object({
   source: z.enum(["calculator", "contact"]),
   personalDataConsent: z.literal(true, { error: "Необходимо согласие на обработку персональных данных" }),
   telegramConsent: z.literal(true, { error: "Необходимо согласие на передачу заявки в Telegram" }),
-  consentVersion: z.literal("2026-09-17"),
-  policyVersion: z.literal("2026-09-17"),
+  // The previous edition is still accepted so a page opened before a release can submit its form.
+  consentVersion: z.enum(["2026-09-17", "2026-10-04"]),
+  policyVersion: z.enum(["2026-09-17", "2026-10-04"]),
 });
 
 export const appRouter = router({

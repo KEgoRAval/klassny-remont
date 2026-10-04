@@ -1,87 +1,90 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { beforeEach, describe, expect, it } from "vitest";
-import { goalForLink, loadMetrika, metrikaCounterId, reachGoal, resetMetrikaForTests, trackPageView } from "./metrika";
+import { describe, expect, it } from "vitest";
+import { goalForLink, installContactGoals, reachGoal, reachLeadGoal, trackPageView, YANDEX_METRIKA_ID } from "./metrika";
 
-type YmCall = unknown[];
-
-function fakeBrowser() {
-  const appended: Array<Record<string, unknown>> = [];
-  const listeners: Record<string, (event: unknown) => void> = {};
+function fakeBrowser({ counterLoaded = true } = {}) {
+  const calls: unknown[][] = [];
+  const listeners: Array<(event: unknown) => void> = [];
+  const win: { ym?: (...args: unknown[]) => void } = counterLoaded ? { ym: (...args) => calls.push(args) } : {};
   const doc = {
-    createElement: () => ({}) as Record<string, unknown>,
-    head: { appendChild: (node: Record<string, unknown>) => appended.push(node) },
-    addEventListener: (type: string, handler: (event: unknown) => void) => {
-      listeners[type] = handler;
+    addEventListener: (_type: string, handler: (event: unknown) => void) => {
+      listeners.push(handler);
+    },
+    removeEventListener: (_type: string, handler: (event: unknown) => void) => {
+      const index = listeners.indexOf(handler);
+      if (index >= 0) listeners.splice(index, 1);
     },
   };
-  const win: { ym?: ((...args: unknown[]) => void) & { a?: YmCall[] } } = {};
-  const calls = () => (win.ym?.a ?? []).map(args => Array.from(args as ArrayLike<unknown>));
-  return { win, doc, appended, listeners, calls };
+  const click = (href: string | null) =>
+    listeners.forEach(listener => listener({ target: { closest: () => (href === null ? null : { getAttribute: () => href }) } }));
+  return { win, doc, calls, listeners, click };
 }
 
 const source = (file: string) => readFileSync(resolve(process.cwd(), file), "utf8");
+const html = source("client/index.html");
 
-describe("Yandex Metrika counter id", () => {
-  it("accepts a numeric counter id", () => {
-    expect(metrikaCounterId("98765432")).toBe(98765432);
-    expect(metrikaCounterId(" 98765432 ")).toBe(98765432);
+describe("Yandex Metrika counter in the page shell", () => {
+  it("loads the Klassny Remont counter on every page, for every visitor", () => {
+    expect(YANDEX_METRIKA_ID).toBe(113397509);
+    expect(html).toContain("https://mc.yandex.ru/metrika/tag.js?id=113397509");
+    expect(html).toContain(
+      `ym(113397509, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});`,
+    );
   });
 
-  it("treats a missing or malformed id as 'Metrika is off'", () => {
-    for (const raw of [undefined, "", "0", "abc", "12.5", "-4"]) expect(metrikaCounterId(raw)).toBeUndefined();
+  it("uses one counter number everywhere", () => {
+    const ids = new Set([...html.matchAll(/(?:tag\.js\?id=|ym\(|watch\/)(\d+)/g)].map(match => match[1]));
+    expect([...ids]).toEqual([String(YANDEX_METRIKA_ID)]);
+  });
+
+  it("places the counter in the head ahead of styles and the application script", () => {
+    const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+    const counterAt = head.indexOf("mc.yandex.ru/metrika/tag.js");
+    expect(counterAt).toBeGreaterThan(0);
+    expect(counterAt).toBeLessThan(head.indexOf("<style>"));
+    expect(html.indexOf("mc.yandex.ru/metrika/tag.js")).toBeLessThan(html.indexOf("/src/entry-client.tsx"));
+  });
+
+  it("keeps the no-JavaScript pixel inside the body", () => {
+    const body = html.slice(html.indexOf("<body>"), html.indexOf("</body>"));
+    expect(body).toContain('<noscript><div><img src="https://mc.yandex.ru/watch/113397509"');
   });
 });
 
-describe("Yandex Metrika loading", () => {
-  beforeEach(() => resetMetrikaForTests());
-
-  it("adds the Metrika script once and initialises the counter without session recording", () => {
-    const { win, doc, appended, calls } = fakeBrowser();
-
-    loadMetrika(98765432, win, doc);
-    loadMetrika(98765432, win, doc);
-
-    expect(appended).toHaveLength(1);
-    expect(appended[0]).toMatchObject({ src: "https://mc.yandex.ru/metrika/tag.js", async: true });
-    const init = calls().filter(call => call[1] === "init");
-    expect(init).toHaveLength(1);
-    expect(init[0][0]).toBe(98765432);
-    expect(init[0][2]).toMatchObject({ clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: false });
-  });
-
-  it("records a goal after the counter is loaded", () => {
-    const { win, doc, calls } = fakeBrowser();
-    loadMetrika(98765432, win, doc);
+describe("Metrika goals", () => {
+  it("records a goal on the site counter", () => {
+    const { win, calls } = fakeBrowser();
 
     reachGoal("lead", win);
 
-    expect(calls()).toContainEqual([98765432, "reachGoal", "lead"]);
+    expect(calls).toEqual([[113397509, "reachGoal", "lead"]]);
   });
 
-  it("records nothing while the visitor has not allowed analytics", () => {
-    const { win } = fakeBrowser();
+  it("records a submitted form as the common lead goal plus the goal of that form", () => {
+    const { win, calls } = fakeBrowser();
+
+    reachLeadGoal("lead_blog", win);
+
+    expect(calls).toEqual([
+      [113397509, "reachGoal", "lead"],
+      [113397509, "reachGoal", "lead_blog"],
+    ]);
+  });
+
+  it("does nothing when the counter script is blocked or has not loaded", () => {
+    const { win } = fakeBrowser({ counterLoaded: false });
 
     expect(() => reachGoal("lead", win)).not.toThrow();
-    expect(win.ym).toBeUndefined();
+    expect(() => trackPageView("/blog", win)).not.toThrow();
   });
 
   it("reports an in-site navigation as a page view", () => {
-    const { win, doc, calls } = fakeBrowser();
-    loadMetrika(98765432, win, doc);
+    const { win, calls } = fakeBrowser();
 
     trackPageView("/blog", win);
 
-    expect(calls()).toContainEqual([98765432, "hit", "/blog"]);
-  });
-
-  it("records contact clicks as goals once loaded", () => {
-    const { win, doc, listeners, calls } = fakeBrowser();
-    loadMetrika(98765432, win, doc);
-
-    listeners.click?.({ target: { closest: () => ({ getAttribute: () => "tel:+79779480672" }) } });
-
-    expect(calls()).toContainEqual([98765432, "reachGoal", "click_phone"]);
+    expect(calls).toEqual([[113397509, "hit", "/blog"]]);
   });
 });
 
@@ -97,16 +100,38 @@ describe("contact link goals", () => {
     expect(goalForLink("#contacts")).toBeUndefined();
     expect(goalForLink(null)).toBeUndefined();
   });
+
+  it("records a click on a phone link as a goal", () => {
+    const { win, doc, calls, click } = fakeBrowser();
+    installContactGoals(doc, win);
+
+    click("tel:+79779480672");
+
+    expect(calls).toEqual([[113397509, "reachGoal", "click_phone"]]);
+  });
+
+  it("ignores clicks that are not on contact links", () => {
+    const { win, doc, calls, click } = fakeBrowser();
+    installContactGoals(doc, win);
+
+    click("/blog");
+    click(null);
+
+    expect(calls).toEqual([]);
+  });
+
+  it("stops listening when asked to", () => {
+    const { win, doc, calls, click } = fakeBrowser();
+    const stop = installContactGoals(doc, win);
+
+    stop();
+    click("tel:+79779480672");
+
+    expect(calls).toEqual([]);
+  });
 });
 
 describe("Metrika wiring in the site", () => {
-  it("never loads Metrika from the HTML shell, only after a cookie choice", () => {
-    expect(source("client/index.html")).not.toContain("mc.yandex.ru");
-    const consent = source("client/src/components/CookieConsent.tsx");
-    const loadAnalytics = consent.slice(consent.indexOf("function loadAnalytics"), consent.indexOf("export function CookieConsent"));
-    expect(loadAnalytics).toContain("loadMetrika(");
-  });
-
   it("records a lead goal from each of the three forms", () => {
     const home = source("client/src/pages/Home.tsx");
     expect(home).toContain('reachLeadGoal("lead_calculator")');
@@ -114,11 +139,17 @@ describe("Metrika wiring in the site", () => {
     expect(source("client/src/pages/Blog.tsx")).toContain('reachLeadGoal("lead_blog")');
   });
 
-  it("reports in-site navigation from the head manager", () => {
-    expect(source("client/src/components/Head.tsx")).toContain("trackPageView(");
+  it("reports in-site navigation and contact clicks from the head manager", () => {
+    const head = source("client/src/components/Head.tsx");
+    expect(head).toContain("trackPageView(");
+    expect(head).toContain("installContactGoals(");
   });
 
-  it("names Yandex Metrika in the cookie section of the policy", () => {
-    expect(source("client/src/pages/Legal.tsx")).toContain("Яндекс Метрика");
+  it("keeps typed names and phone numbers out of session recordings", () => {
+    for (const [file, fields] of [["client/src/pages/Home.tsx", 4], ["client/src/pages/Blog.tsx", 2]] as const) {
+      const page = source(file);
+      expect(page.split('<input className="ym-disable-keys" value={').length - 1, file).toBe(fields);
+      expect(page, file).not.toContain("<input value={");
+    }
   });
 });

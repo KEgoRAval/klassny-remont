@@ -10,8 +10,8 @@ export type LeadNotification = {
   source: "calculator" | "contact";
   personalDataConsent: true;
   telegramConsent: true;
-  consentVersion: "2026-09-17";
-  policyVersion: "2026-09-17";
+  consentVersion: "2026-09-17" | "2026-10-04";
+  policyVersion: "2026-09-17" | "2026-10-04";
 };
 
 const escapeHtml = (value: string) =>

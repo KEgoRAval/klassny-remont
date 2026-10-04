@@ -1,4 +1,5 @@
-export const PERSONAL_DATA_CONSENT_VERSION = "2026-09-17";
+/** Edition date shared by the consent text and the privacy policy; recorded with every lead. */
+export const PERSONAL_DATA_CONSENT_VERSION = "2026-10-04";
 
 type PersonalDataConsentProps = {
   formId: string;

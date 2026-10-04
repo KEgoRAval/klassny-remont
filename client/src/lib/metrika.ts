@@ -1,8 +1,7 @@
 /**
- * Yandex Metrika. The counter is loaded only after the visitor allows
- * analytics in the cookie notice (see CookieConsent), and nothing is recorded
- * before that. Session recording (Webvisor) stays off: the forms collect names
- * and phone numbers.
+ * Yandex Metrika goals. The counter itself is the standard snippet in
+ * client/index.html and loads on every page for every visitor; this module
+ * only talks to it. The counter number here must match the one in the snippet.
  *
  * Goals to create in the Metrika interface as "JavaScript event" goals:
  *   lead             — any form was submitted (use this one for Direct)
@@ -11,9 +10,7 @@
  *   lead_blog        — estimate form on a residential-complex article
  *   click_phone, click_telegram, click_whatsapp — clicks on contact links
  */
-
-/** Counter number from the Metrika interface. Empty string keeps Metrika off. */
-export const YANDEX_METRIKA_ID: string = (import.meta.env?.VITE_YANDEX_METRIKA_ID as string | undefined) ?? "";
+export const YANDEX_METRIKA_ID = 113397509;
 
 export type MetrikaGoal =
   | "lead"
@@ -24,26 +21,15 @@ export type MetrikaGoal =
   | "click_telegram"
   | "click_whatsapp";
 
-type Ym = ((...args: unknown[]) => void) & { a?: unknown[][]; l?: number };
-type MetrikaWindow = { ym?: Ym };
+type MetrikaWindow = { ym?: (...args: unknown[]) => void };
+type ClickEvent = { target?: { closest?: (selector: string) => { getAttribute(name: string): string | null } | null } | null };
 type MetrikaDocument = {
-  createElement(tag: string): unknown;
-  head: { appendChild(node: never): unknown };
   addEventListener(type: string, handler: (event: never) => void, options?: unknown): void;
+  removeEventListener(type: string, handler: (event: never) => void, options?: unknown): void;
 };
-
-const TAG_URL = "https://mc.yandex.ru/metrika/tag.js";
-
-let activeCounterId: number | undefined;
 
 const browserWindow = () => window as unknown as MetrikaWindow;
 const browserDocument = () => document as unknown as MetrikaDocument;
-
-export function metrikaCounterId(raw: string | undefined): number | undefined {
-  const value = raw?.trim() ?? "";
-  if (!/^[1-9]\d*$/.test(value)) return undefined;
-  return Number(value);
-}
 
 export function goalForLink(href: string | null | undefined): MetrikaGoal | undefined {
   if (!href) return undefined;
@@ -53,37 +39,9 @@ export function goalForLink(href: string | null | undefined): MetrikaGoal | unde
   return undefined;
 }
 
-export function loadMetrika(counterId: number, win: MetrikaWindow = browserWindow(), doc: MetrikaDocument = browserDocument()): void {
-  if (activeCounterId !== undefined) return;
-  activeCounterId = counterId;
-
-  const queue: Ym = (...args: unknown[]) => {
-    (queue.a = queue.a ?? []).push(args);
-  };
-  queue.l = Date.now();
-  win.ym = win.ym ?? queue;
-
-  const script = doc.createElement("script") as { src: string; async: boolean };
-  script.async = true;
-  script.src = TAG_URL;
-  doc.head.appendChild(script as never);
-
-  win.ym(counterId, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: false });
-
-  doc.addEventListener(
-    "click",
-    ((event: { target?: { closest?: (selector: string) => { getAttribute(name: string): string | null } | null } }) => {
-      const link = event.target?.closest?.("a[href]");
-      const goal = goalForLink(link?.getAttribute("href"));
-      if (goal) reachGoal(goal, win);
-    }) as (event: never) => void,
-    { capture: true },
-  );
-}
-
+/** Records a goal. Does nothing if the counter script is blocked or not loaded. */
 export function reachGoal(goal: MetrikaGoal, win: MetrikaWindow = browserWindow()): void {
-  if (activeCounterId === undefined || !win.ym) return;
-  win.ym(activeCounterId, "reachGoal", goal);
+  win.ym?.(YANDEX_METRIKA_ID, "reachGoal", goal);
 }
 
 /** A submitted form: the common "lead" goal plus the goal of the specific form. */
@@ -94,10 +52,17 @@ export function reachLeadGoal(form: "lead_calculator" | "lead_contact" | "lead_b
 
 /** Page view for a navigation that did not reload the page. */
 export function trackPageView(url: string, win: MetrikaWindow = browserWindow()): void {
-  if (activeCounterId === undefined || !win.ym) return;
-  win.ym(activeCounterId, "hit", url);
+  win.ym?.(YANDEX_METRIKA_ID, "hit", url);
 }
 
-export function resetMetrikaForTests(): void {
-  activeCounterId = undefined;
+/** Records clicks on phone, Telegram and WhatsApp links as goals. Returns a function that stops it. */
+export function installContactGoals(doc: MetrikaDocument = browserDocument(), win: MetrikaWindow = browserWindow()): () => void {
+  const onClick = (event: ClickEvent) => {
+    const link = event.target?.closest?.("a[href]");
+    const goal = goalForLink(link?.getAttribute("href"));
+    if (goal) reachGoal(goal, win);
+  };
+  const handler = onClick as (event: never) => void;
+  doc.addEventListener("click", handler, { capture: true });
+  return () => doc.removeEventListener("click", handler, { capture: true });
 }

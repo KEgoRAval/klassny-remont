@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { trackPageView } from "@/lib/metrika";
+import { installContactGoals, trackPageView } from "@/lib/metrika";
 import { prefetchForPath } from "../ssr/prefetch";
 
 export function Head() {
   const [location] = useLocation();
 
   const firstRender = useRef(true);
+
+  useEffect(() => installContactGoals(), []);
 
   useEffect(() => {
     document.title = prefetchForPath(location).title;
