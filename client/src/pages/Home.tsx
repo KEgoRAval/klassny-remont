@@ -20,17 +20,18 @@ import {
 import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import { TELEGRAM_URL, WHATSAPP_URL } from "@/components/MessengerQuickActions";
+import { imageSize, siteImages } from "@/content/media";
 
 const images = {
-  hero: "/manus-storage/hero-living-room_277d141a.jpg",
-  veryLiving: "/manus-storage/very-enhanced-living_6019bd19.png",
-  veryEntry: "/manus-storage/very-enhanced-entry_0f41baa0.png",
-  veryBedroom: "/manus-storage/very-enhanced-bedroom_262c2040.png",
-  veryBathroom: "/manus-storage/very-enhanced-bathroom_c918e00d.png",
-  everLiving: "/manus-storage/ever-enhanced-living_6eb96fe0.png",
-  everEntry: "/manus-storage/ever-enhanced-entry_054ed219.png",
-  everBedroom: "/manus-storage/ever-enhanced-bedroom_5f368637.png",
-  everShower: "/manus-storage/ever-enhanced-shower_967e9d92.png",
+  hero: siteImages.hero.src,
+  veryLiving: siteImages.veryLiving.src,
+  veryEntry: siteImages.veryEntry.src,
+  veryBedroom: siteImages.veryBedroom.src,
+  veryBathroom: siteImages.veryBathroom.src,
+  everLiving: siteImages.everLiving.src,
+  everEntry: siteImages.everEntry.src,
+  everBedroom: siteImages.everBedroom.src,
+  everShower: siteImages.everShower.src,
 };
 
 const projectCards = [
@@ -203,7 +204,7 @@ export default function Home() {
 
       <main id="top">
         <section className="hero">
-          <img src={images.hero} alt="Интерьер реализованной гостиной" className="hero-image" />
+          <img src={images.hero} srcSet={siteImages.hero.srcSet} sizes={siteImages.hero.sizes} width={siteImages.hero.width} height={siteImages.hero.height} alt="Интерьер реализованной гостиной" className="hero-image" fetchPriority="high" decoding="async" />
           <div className="hero-overlay"></div>
           <div className="hero-content">
             <div className="hero-kicker"><span className="pulse-dot"></span> Ремонт квартир в Москве</div>
@@ -251,7 +252,7 @@ export default function Home() {
           <div className="project-grid">
             {projectCards.map((project, index) => (
               <article className={`project-card project-${index + 1}`} key={project.image}>
-                <img src={project.image} alt={project.title} loading="lazy" />
+                <img src={project.image} {...imageSize(project.image)} alt={project.title} loading="lazy" decoding="async" />
                 <div className="project-shade"></div>
                 <div className="project-meta"><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
                 <div className="project-title"><h3>{project.title}</h3><p>{project.meta}</p></div>

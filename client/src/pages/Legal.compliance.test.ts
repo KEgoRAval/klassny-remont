@@ -28,7 +28,8 @@ describe("personal data legal pages", () => {
     expect(html).not.toContain("data-website-id");
     expect(html).not.toContain("fonts.googleapis.com");
     expect(html).not.toContain("fonts.gstatic.com");
-    expect(html).toContain("/manus-storage/");
+    expect(html).toContain('url("/fonts/');
+    expect(html).not.toContain("/manus-storage/");
     expect(cookieConsent).toContain("saveChoice(true)");
     expect(cookieConsent).toContain("saveChoice(false)");
     expect(cookieConsent).toContain('window.localStorage.setItem');

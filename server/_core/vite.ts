@@ -7,6 +7,7 @@ import { createServer as createViteServer } from "vite";
 import superjson from "superjson";
 import viteConfig from "../../vite.config";
 import type { HeadMeta } from "../../client/src/ssr/prefetch";
+import { staticCacheControl } from "./staticAssets";
 
 const escapeHtml = (value: string) => value
   .replace(/&/g, "&amp;")
@@ -128,7 +129,14 @@ export function serveStatic(app: Express) {
     next();
   });
 
-  app.use(express.static(distPath, { index: false, redirect: false }));
+  app.use(express.static(distPath, {
+    index: false,
+    redirect: false,
+    setHeaders: (res, filePath) => {
+      const urlPath = `/${path.relative(distPath, filePath).split(path.sep).join("/")}`;
+      res.setHeader("Cache-Control", staticCacheControl(urlPath));
+    },
+  }));
   app.use("*", async (req, res) => {
     const templatePath = path.resolve(distPath, "index.html");
     try {

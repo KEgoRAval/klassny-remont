@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Clock3, FileText, Phone } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { blogPosts, getBlogPost, getRelatedPosts, type BlogPost } from "@/content/blog";
+import { imageSize } from "@/content/media";
 import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import NotFound from "@/pages/NotFound";
@@ -46,7 +47,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
   return (
     <article className={`blog-card blog-card-${(index % 3) + 1}`}>
       <Link href={post.path} className="blog-card-image" aria-label={`Открыть статью: ${post.title}`}>
-        <img src={post.image} alt={post.imageAlt} loading={index > 1 ? "lazy" : "eager"} />
+        <img src={post.image} {...imageSize(post.image)} alt={post.imageAlt} loading={index > 1 ? "lazy" : "eager"} decoding="async" />
       </Link>
       <div className="blog-card-body">
         <div className="blog-card-meta"><span>{post.category}</span><time dateTime={post.modifiedAt}>{post.displayDate}</time></div>
@@ -77,7 +78,7 @@ export function BlogIndex() {
         </section>
 
         <section className="blog-featured" aria-label="Главная статья">
-          <Link href={featured.path} className="blog-featured-image"><img src={featured.image} alt={featured.imageAlt} /></Link>
+          <Link href={featured.path} className="blog-featured-image"><img src={featured.image} {...imageSize(featured.image)} alt={featured.imageAlt} decoding="async" /></Link>
           <div className="blog-featured-copy"><p className="blog-kicker">{featured.category}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><div className="blog-byline"><span>Классный Ремонт</span><span>·</span><time dateTime={featured.modifiedAt}>{featured.displayDate}</time><span>·</span><span>{featured.readTime}</span></div><Link href={featured.path} className="blog-button">Разобраться в смете <ArrowRight size={18} /></Link></div>
         </section>
 
@@ -162,7 +163,7 @@ export function BlogArticle() {
               <p className="article-lead">{post.description}</p>
               <div className="article-author"><span className="article-author-mark">КР</span><span><b>Редакция «Классного Ремонта»</b><small>Практика ремонта квартир в Москве</small></span></div>
             </div>
-            <div className="article-cover"><img src={post.image} alt={post.imageAlt} /></div>
+            <div className="article-cover"><img src={post.image} {...imageSize(post.image)} alt={post.imageAlt} fetchPriority="high" decoding="async" /></div>
           </header>
 
           <div className="article-shell article-content-wrap">
