@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(resolve(process.cwd(), "client/src/pages/Home.tsx"), "utf8");
+const mediaSource = readFileSync(resolve(process.cwd(), "client/src/content/media.ts"), "utf8");
 const seo = readFileSync(resolve(process.cwd(), "client/src/ssr/prefetch.ts"), "utf8");
 const llms = readFileSync(resolve(process.cwd(), "client/public/llms.txt"), "utf8");
 const pricing = readFileSync(resolve(process.cwd(), "client/public/pricing.md"), "utf8");
@@ -74,10 +75,14 @@ describe("lead form feedback", () => {
     expect(source).not.toContain("Проект в работе");
     expect(source).not.toContain("Интерьерная визуализация");
     expect(source).not.toContain("интерьерные визуализации");
-    expect(source).toContain("very-enhanced-living_6019bd19.png");
-    expect(source).toContain("very-enhanced-entry_0f41baa0.png");
-    expect(source).toContain("very-enhanced-bedroom_262c2040.png");
-    expect(source).toContain("very-enhanced-bathroom_c918e00d.png");
+    expect(source).toContain("siteImages.veryLiving.src");
+    expect(mediaSource).toContain("/media/very-enhanced-living_6019bd19.webp");
+    expect(source).toContain("siteImages.veryEntry.src");
+    expect(mediaSource).toContain("/media/very-enhanced-entry_0f41baa0.webp");
+    expect(source).toContain("siteImages.veryBedroom.src");
+    expect(mediaSource).toContain("/media/very-enhanced-bedroom_262c2040.webp");
+    expect(source).toContain("siteImages.veryBathroom.src");
+    expect(mediaSource).toContain("/media/very-enhanced-bathroom_c918e00d.webp");
   });
 
   it("uses a stable unique key for each portfolio card", () => {
@@ -89,10 +94,14 @@ describe("lead form feedback", () => {
     expect(source).toContain("const projectCards");
     expect(source).not.toContain("veryProjectCards");
     expect(source).not.toContain("everProjectCards");
-    expect(source).toContain("ever-enhanced-living_6eb96fe0.png");
-    expect(source).toContain("ever-enhanced-bedroom_5f368637.png");
-    expect(source).toContain("very-enhanced-bedroom_262c2040.png");
-    expect(source).toContain("ever-enhanced-entry_054ed219.png");
+    expect(source).toContain("siteImages.everLiving.src");
+    expect(mediaSource).toContain("/media/ever-enhanced-living_6eb96fe0.webp");
+    expect(source).toContain("siteImages.everBedroom.src");
+    expect(mediaSource).toContain("/media/ever-enhanced-bedroom_5f368637.webp");
+    expect(source).toContain("siteImages.veryBedroom.src");
+    expect(mediaSource).toContain("/media/very-enhanced-bedroom_262c2040.webp");
+    expect(source).toContain("siteImages.everEntry.src");
+    expect(mediaSource).toContain("/media/ever-enhanced-entry_054ed219.webp");
   });
 
   it("provides direct local answers and matching FAQ schema for AI search", () => {
