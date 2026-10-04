@@ -1,0 +1,33 @@
+[Unit]
+Description=Klassny Remont website
+Documentation=https://89.117.149.68
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=kegora
+Group=kegora
+WorkingDirectory=/home/kegora/apps/klassny-remont/current
+# Leads are written here before Telegram is contacted. Lives outside releases so it survives deploys.
+Environment=LEADS_JOURNAL_PATH=/home/kegora/apps/klassny-remont/shared/leads/leads.jsonl
+EnvironmentFile=/home/kegora/apps/klassny-remont/shared/.env
+ExecStart=/usr/bin/node /home/kegora/apps/klassny-remont/current/dist/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+KillSignal=SIGINT
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=full
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
