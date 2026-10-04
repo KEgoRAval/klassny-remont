@@ -47,4 +47,31 @@ describe("Telegram lead delivery", () => {
     const request = fetcher.mock.calls[0]?.[1];
     expect(JSON.parse(request.body)).toMatchObject({ chat_id: "-100123", parse_mode: "HTML" });
   });
+
+  it("says when a late-delivered lead was actually received, in Moscow time", () => {
+    const message = formatLeadMessage(sampleLead, { delayedSince: "2026-10-04T12:00:00.000Z" });
+
+    expect(message).toContain("Доставлено с задержкой");
+    expect(message).toContain("04.10.2026, 15:00");
+  });
+
+  it("does not mention a delay for a lead delivered straight away", () => {
+    expect(formatLeadMessage(sampleLead)).not.toContain("задержк");
+  });
+
+  it("passes the delay note through to the message it sends", async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+
+    await sendLeadToTelegram(sampleLead, fetcher, { token: "secret-token", chatId: "-100123" }, { delayedSince: "2026-10-04T12:00:00.000Z" });
+
+    expect(JSON.parse(fetcher.mock.calls[0]?.[1].body).text).toContain("Доставлено с задержкой");
+  });
+
+  it("puts a time limit on the request so a hanging Telegram cannot hold the form", async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) });
+
+    await sendLeadToTelegram(sampleLead, fetcher, { token: "secret-token", chatId: "-100123" });
+
+    expect(fetcher.mock.calls[0]?.[1].signal).toBeInstanceOf(AbortSignal);
+  });
 });

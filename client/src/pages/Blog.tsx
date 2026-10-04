@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Clock3, FileText, Phone } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { blogPosts, getBlogPost, getRelatedPosts, type BlogPost } from "@/content/blog";
+import { imageSize } from "@/content/media";
+import { reachLeadGoal } from "@/lib/metrika";
 import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import NotFound from "@/pages/NotFound";
@@ -46,7 +48,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
   return (
     <article className={`blog-card blog-card-${(index % 3) + 1}`}>
       <Link href={post.path} className="blog-card-image" aria-label={`Открыть статью: ${post.title}`}>
-        <img src={post.image} alt={post.imageAlt} loading={index > 1 ? "lazy" : "eager"} />
+        <img src={post.image} {...imageSize(post.image)} alt={post.imageAlt} loading={index > 1 ? "lazy" : "eager"} decoding="async" />
       </Link>
       <div className="blog-card-body">
         <div className="blog-card-meta"><span>{post.category}</span><time dateTime={post.modifiedAt}>{post.displayDate}</time></div>
@@ -77,7 +79,7 @@ export function BlogIndex() {
         </section>
 
         <section className="blog-featured" aria-label="Главная статья">
-          <Link href={featured.path} className="blog-featured-image"><img src={featured.image} alt={featured.imageAlt} /></Link>
+          <Link href={featured.path} className="blog-featured-image"><img src={featured.image} {...imageSize(featured.image)} alt={featured.imageAlt} decoding="async" /></Link>
           <div className="blog-featured-copy"><p className="blog-kicker">{featured.category}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><div className="blog-byline"><span>Классный Ремонт</span><span>·</span><time dateTime={featured.modifiedAt}>{featured.displayDate}</time><span>·</span><span>{featured.readTime}</span></div><Link href={featured.path} className="blog-button">Разобраться в смете <ArrowRight size={18} /></Link></div>
         </section>
 
@@ -114,6 +116,7 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
   const totalEstimate = workEstimate + materialsEstimate;
   const submitLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
+      reachLeadGoal("lead_blog");
       setSubmitted(true);
       setPhone("");
       setPersonalDataConsent(false);
@@ -133,7 +136,7 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
         <div className="complex-name"><span>Ваш жилой комплекс</span><b>{complexName}</b></div>
         <label className="complex-range-label">Площадь квартиры <output>{area} м²</output><input type="range" min="50" max="250" step="5" value={area} onChange={(event) => setArea(Number(event.target.value))} style={{ "--value": `${((area - 50) / 200) * 100}%` } as React.CSSProperties} disabled={submitLead.isPending} /><small>50 м² <span>250 м²</span></small></label>
         <div className="complex-estimate-price"><span>Ориентир по работам</span><b>от {formatRubles(workEstimate)}</b><small>Материалы и индивидуальные решения — отдельной строкой после замера.</small></div>
-        <div className="complex-fields"><label>Ваше имя<input value={name} onChange={(event) => setName(event.target.value)} disabled={submitLead.isPending} required minLength={2} placeholder="Как к вам обращаться" /></label><label>Телефон<input value={phone} onChange={(event) => setPhone(event.target.value)} disabled={submitLead.isPending} required minLength={6} placeholder="+7 (___) ___‑__‑__" /></label></div>
+        <div className="complex-fields"><label>Ваше имя<input className="ym-record-keys" value={name} onChange={(event) => setName(event.target.value)} disabled={submitLead.isPending} required minLength={2} placeholder="Как к вам обращаться" /></label><label>Телефон<input className="ym-record-keys" value={phone} onChange={(event) => setPhone(event.target.value)} disabled={submitLead.isPending} required minLength={6} placeholder="+7 (___) ___‑__‑__" /></label></div>
         <PersonalDataConsent formId={`complex-estimate-${complexName.replaceAll(" ", "-").replaceAll("«", "").replaceAll("»", "")}`} personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} showValidation={showConsentValidation} onConsentInvalid={() => setShowConsentValidation(true)} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
         <button className={submitLead.isPending ? "blog-button complex-submit form-submit-loading" : "blog-button complex-submit"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <><span className="button-loader" aria-hidden="true"><i></i><i></i><i></i></span>Отправляем заявку</> : <>Получить расчёт за 24 часа <ArrowRight size={17} /></>}</button>
         {submitLead.isError && <p className="complex-form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
@@ -162,7 +165,7 @@ export function BlogArticle() {
               <p className="article-lead">{post.description}</p>
               <div className="article-author"><span className="article-author-mark">КР</span><span><b>Редакция «Классного Ремонта»</b><small>Практика ремонта квартир в Москве</small></span></div>
             </div>
-            <div className="article-cover"><img src={post.image} alt={post.imageAlt} /></div>
+            <div className="article-cover"><img src={post.image} {...imageSize(post.image)} alt={post.imageAlt} fetchPriority="high" decoding="async" /></div>
           </header>
 
           <div className="article-shell article-content-wrap">

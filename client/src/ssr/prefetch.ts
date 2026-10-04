@@ -1,4 +1,5 @@
 import { blogArticleJsonLd, blogIndexJsonLd, getBlogPostFromPath } from "@/content/blog";
+import { ogImageFor, siteImages } from "@/content/media";
 
 export type HeadMeta = {
   title: string;
@@ -32,7 +33,7 @@ export function prefetchForPath(url: string): HeadMeta {
       title: HOME_TITLE,
       description: HOME_DESCRIPTION,
       ogType: "website",
-      ogImage: "/manus-storage/hero-living-room_277d141a.jpg",
+      ogImage: ogImageFor(siteImages.hero.src),
       ogImageAlt: "Интерьер гостиной после ремонта от Классного Ремонта",
       canonicalPath: "/",
       structuredData: {
@@ -78,7 +79,7 @@ export function prefetchForPath(url: string): HeadMeta {
       title: "Блог о ремонте квартир в Москве — Классный Ремонт",
       description: "Практические статьи о стоимости и сроках ремонта, приёмке квартиры в новостройке и подготовке к ремонту в жилых комплексах Москвы.",
       ogType: "website",
-      ogImage: "/manus-storage/very-enhanced-living_6019bd19.png",
+      ogImage: ogImageFor(siteImages.veryLiving.src),
       ogImageAlt: "Современный интерьер квартиры в Москве",
       canonicalPath: "/blog",
       structuredData: blogIndexJsonLd,
@@ -109,7 +110,7 @@ export function prefetchForPath(url: string): HeadMeta {
       title: `${post.title} — Классный Ремонт`,
       description: post.description,
       ogType: "article",
-      ogImage: post.image,
+      ogImage: ogImageFor(post.image),
       ogImageAlt: post.imageAlt,
       canonicalPath: post.path,
       publishedAt: post.publishedAt,

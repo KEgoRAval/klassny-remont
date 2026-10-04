@@ -1,3 +1,5 @@
+import { siteImages } from "./media";
+
 export type BlogSource = { label: string; url: string };
 
 export type BlogSection = {
@@ -32,13 +34,13 @@ export type BlogPost = {
 };
 
 const images = {
-  living: "/manus-storage/very-enhanced-living_6019bd19.png",
-  entry: "/manus-storage/very-enhanced-entry_0f41baa0.png",
-  bedroom: "/manus-storage/very-enhanced-bedroom_262c2040.png",
-  bath: "/manus-storage/very-enhanced-bathroom_c918e00d.png",
-  everLiving: "/manus-storage/ever-enhanced-living_6eb96fe0.png",
-  everEntry: "/manus-storage/ever-enhanced-entry_054ed219.png",
-  everBedroom: "/manus-storage/ever-enhanced-bedroom_5f368637.png",
+  living: siteImages.veryLiving.src,
+  entry: siteImages.veryEntry.src,
+  bedroom: siteImages.veryBedroom.src,
+  bath: siteImages.veryBathroom.src,
+  everLiving: siteImages.everLiving.src,
+  everEntry: siteImages.everEntry.src,
+  everBedroom: siteImages.everBedroom.src,
 };
 
 const modifiedAt = "2026-09-17";

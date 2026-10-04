@@ -3,21 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=113397509', 'ym');
+
+        ym(113397509, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <!-- /Yandex.Metrika counter -->
+    <link rel="preload" href="/fonts/manrope-400.woff2" as="font" type="font/woff2" crossorigin />
     <style>
-      /* Fraunces and Manrope are self-hosted in site storage. Source: Google Fonts, OFL. */
-      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 400; font-display: swap; src: url("/manus-storage/6NUh8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0K7iN7hzFUPJH58nib1603gg7S2nfgRYIctxujDg_c41b47ed.ttf") format("truetype"); }
-      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 500; font-display: swap; src: url("/manus-storage/6NUh8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0K7iN7hzFUPJH58nib1603gg7S2nfgRYIchRujDg_6d736901.ttf") format("truetype"); }
-      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 600; font-display: swap; src: url("/manus-storage/6NUh8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0K7iN7hzFUPJH58nib1603gg7S2nfgRYIcaRyjDg_97744e70.ttf") format("truetype"); }
-      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 700; font-display: swap; src: url("/manus-storage/6NUh8FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0K7iN7hzFUPJH58nib1603gg7S2nfgRYIcUByjDg_30f58a38.ttf") format("truetype"); }
-      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 400; font-display: swap; src: url("/manus-storage/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk79FO_F_f08374ed.ttf") format("truetype"); }
-      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 500; font-display: swap; src: url("/manus-storage/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk7PFO_F_bfd7bd4e.ttf") format("truetype"); }
-      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 600; font-display: swap; src: url("/manus-storage/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk4jE-_F_bdaabe69.ttf") format("truetype"); }
-      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 700; font-display: swap; src: url("/manus-storage/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk4aE-_F_fb60ae34.ttf") format("truetype"); }
-      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 800; font-display: swap; src: url("/manus-storage/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk59E-_F_a7300312.ttf") format("truetype"); }
+      /* Fraunces and Manrope are served from /fonts on this site. Source: Google Fonts, OFL. */
+      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/fraunces-400.woff2") format("woff2"); }
+      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/fraunces-500.woff2") format("woff2"); }
+      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/fraunces-600.woff2") format("woff2"); }
+      @font-face { font-family: "Fraunces"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/fraunces-700.woff2") format("woff2"); }
+      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/manrope-400.woff2") format("woff2"); }
+      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/manrope-500.woff2") format("woff2"); }
+      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/manrope-600.woff2") format("woff2"); }
+      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/manrope-700.woff2") format("woff2"); }
+      @font-face { font-family: "Manrope"; font-style: normal; font-weight: 800; font-display: swap; src: url("/fonts/manrope-800.woff2") format("woff2"); }
     </style>
     <!--app-head-->
   </head>
   <body>
+    <noscript><div><img src="https://mc.yandex.ru/watch/113397509" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
     <div id="root"><!--app-html--></div>
     <script type="module" src="/src/entry-client.tsx"></script>
   </body>

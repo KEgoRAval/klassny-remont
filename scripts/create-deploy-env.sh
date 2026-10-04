@@ -37,6 +37,7 @@ HOST="127.0.0.1"
 PORT="3020"
 CANONICAL_ORIGIN="https://krem.moscow"
 SITE_NAME="Классный Ремонт"
+LEADS_JOURNAL_PATH="/home/kegora/apps/klassny-remont/shared/leads/leads.jsonl"
 EOF
 
 chmod 600 "$output"

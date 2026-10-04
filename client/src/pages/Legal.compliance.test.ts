@@ -24,24 +24,58 @@ describe("personal data legal pages", () => {
     expect(legal).toContain("8 (977) 948‑06‑72");
   });
 
-  it("loads analytics only after an affirmative cookie choice", () => {
+  it("keeps third-party fonts and the Umami script out of the page shell", () => {
     expect(html).not.toContain("data-website-id");
     expect(html).not.toContain("fonts.googleapis.com");
     expect(html).not.toContain("fonts.gstatic.com");
-    expect(html).toContain("/manus-storage/");
-    expect(cookieConsent).toContain("saveChoice(true)");
-    expect(cookieConsent).toContain("saveChoice(false)");
-    expect(cookieConsent).toContain('window.localStorage.setItem');
-    expect(cookieConsent).toContain("loadAnalytics()");
+    expect(html).toContain('url("/fonts/');
+    expect(html).not.toContain("/manus-storage/");
   });
 
-  it("offers compact granular cookie preferences and explicit saving", () => {
-    expect(cookieConsent).toContain('setDetailsOpen(!detailsOpen)');
-    expect(cookieConsent).toContain('id="cookie-preferences"');
-    expect(cookieConsent).toContain("Необходимые");
-    expect(cookieConsent).toContain("Аналитика");
-    expect(cookieConsent).toContain("Сохранить выбор");
-    expect(cookieConsent).toContain("saveChoice(analyticsEnabled)");
+  it("tells visitors about cookies and analytics as a notice, not as a choice it does not honour", () => {
+    expect(cookieConsent).toContain("Продолжая пользоваться сайтом");
+    expect(cookieConsent).toContain("Яндекс Метрик");
+    expect(cookieConsent).toContain('href="/privacy-policy#cookies"');
+    expect(cookieConsent).toContain("Понятно");
+    for (const stale of ["Только необходимые", "Настроить", "Сохранить выбор", "только с согласия", "Разрешить аналитические"]) {
+      expect(cookieConsent, stale).not.toContain(stale);
+    }
+  });
+
+  it("does not load the Metrika counter from the cookie notice", () => {
+    expect(cookieConsent).not.toContain("mc.yandex.ru");
+    expect(cookieConsent).not.toContain("loadMetrika");
+  });
+
+  it("survives a browser that blocks site storage", () => {
+    expect(cookieConsent).toContain("try {");
+    expect(cookieConsent).toContain("catch");
+  });
+
+  it("describes analytics in the policy as it actually works", () => {
+    const cookies = legal.slice(legal.indexOf('section id="cookies"'), legal.indexOf("</section>", legal.indexOf('section id="cookies"')));
+    expect(cookies).toContain("Яндекс Метрик");
+    expect(cookies).toContain("Вебвизор");
+    expect(cookies).toContain("при открытии страниц сайта");
+    expect(cookies).toContain("настройках браузера");
+    for (const stale of ["не загружаются до выбора", "не используется", "Изменить выбор cookies", "может отклонить аналитику"]) {
+      expect(cookies, stale).not.toContain(stale);
+    }
+  });
+
+  it("tells visitors that what they type into forms is recorded, even if the form is not sent", () => {
+    expect(legal).toContain("Вебвизор записывает и то, что посетитель вводит в поля форм, включая имя и телефон, в том числе если форма не отправлена.");
+    expect(legal).not.toContain("в записи Вебвизора не попадает");
+  });
+
+  it("does not promise a separate analytics permission anywhere else in the policy", () => {
+    expect(legal).not.toContain("только после отдельного разрешения на cookies");
+    expect(legal).toContain("веб‑аналитика (Яндекс Метрика, Umami)");
+  });
+
+  it("publishes the changed policy and the consent text that names it under one new edition date", () => {
+    expect(legal).toContain('const CONSENT_VERSION = "2026-10-04"');
+    expect(personalDataConsent).toContain('export const PERSONAL_DATA_CONSENT_VERSION = "2026-10-04"');
   });
 
   it("exposes an accessible custom error hint for unconfirmed consents", () => {

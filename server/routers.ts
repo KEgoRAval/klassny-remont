@@ -4,8 +4,8 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
-import { sendLeadToTelegram } from "./telegram";
-import { createLeadConsent } from "./db";
+import { leadPipelineDeps } from "./leadService";
+import { submitLead } from "./leadPipeline";
 
 export const leadInput = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(80),
@@ -19,8 +19,9 @@ export const leadInput = z.object({
   source: z.enum(["calculator", "contact"]),
   personalDataConsent: z.literal(true, { error: "Необходимо согласие на обработку персональных данных" }),
   telegramConsent: z.literal(true, { error: "Необходимо согласие на передачу заявки в Telegram" }),
-  consentVersion: z.literal("2026-09-17"),
-  policyVersion: z.literal("2026-09-17"),
+  // The previous edition is still accepted so a page opened before a release can submit its form.
+  consentVersion: z.enum(["2026-09-17", "2026-10-04"]),
+  policyVersion: z.enum(["2026-09-17", "2026-10-04"]),
 });
 
 export const appRouter = router({
@@ -36,17 +37,8 @@ export const appRouter = router({
   leads: router({
     submit: publicProcedure.input(leadInput).mutation(async ({ input }) => {
       try {
-        await sendLeadToTelegram(input);
-        await createLeadConsent({
-          name: input.name,
-          phone: input.phone,
-          service: input.service,
-          source: input.source,
-          personalDataConsent: 1,
-          telegramConsent: 1,
-          consentVersion: input.consentVersion,
-          policyVersion: input.policyVersion,
-        });
+        // The lead is written to disk before Telegram is contacted; see leadPipeline.ts.
+        await submitLead(input, leadPipelineDeps());
         return { success: true } as const;
       } catch (error) {
         console.error("[Lead notification]", error);

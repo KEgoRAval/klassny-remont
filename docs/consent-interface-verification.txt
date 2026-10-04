@@ -7,3 +7,5 @@ Browser review, 17 September 2026:
 Follow-up validation: the DOM confirms both homepage checkboxes are initially unchecked and required; the contact form is invalid before consent and required fields are completed. No analytics script is present before an affirmative cookie choice. The public policy page renders the operator identity, separate Telegram transfer disclosure, cookies settings action, and withdrawal route by telephone.
 
 Resource verification: the privacy policy page exposes no Google or gstatic font links, includes self-hosted font sources from site storage, declares noindex, shows the cookie banner before a decision, and has no analytics script loaded before affirmative consent.
+
+Superseded on 2026-10-04: the cookie notice no longer offers a rejection option or an analytics opt-in. The Yandex Metrika counter loads with every page and the notice only informs. See docs/personal-data-compliance-notes.md. The checks above about the lead-form consents still apply.

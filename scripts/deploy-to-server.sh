@@ -48,6 +48,7 @@ remote_ssh "install -m 0600 ~/staging/.env.production '$remote_root/shared/.env'
   tar \
     --exclude='./node_modules' \
     --exclude='./.git' \
+    --exclude='./originals' \
     --exclude='./deployment/.env.production' \
     --exclude='./.env' \
     --exclude='./.env.*' \

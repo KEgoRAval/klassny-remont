@@ -30,6 +30,18 @@ describe("lead consent validation", () => {
     expect(leadInput.safeParse({ ...validLead, telegramConsent: false }).success).toBe(false);
   });
 
+  it("accepts the edition of 4 October 2026", () => {
+    expect(leadInput.safeParse({ ...validLead, consentVersion: "2026-10-04", policyVersion: "2026-10-04" }).success).toBe(true);
+  });
+
+  it("still accepts the previous edition from a page opened before the release", () => {
+    expect(leadInput.safeParse({ ...validLead, consentVersion: "2026-09-17", policyVersion: "2026-09-17" }).success).toBe(true);
+  });
+
+  it("rejects an unknown policy edition", () => {
+    expect(leadInput.safeParse({ ...validLead, policyVersion: "2000-01-01" }).success).toBe(false);
+  });
+
   it("rejects an unknown consent version", () => {
     expect(leadInput.safeParse({ ...validLead, consentVersion: "2000-01-01" }).success).toBe(false);
   });

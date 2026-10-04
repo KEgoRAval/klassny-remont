@@ -10,8 +10,8 @@ export type LeadNotification = {
   source: "calculator" | "contact";
   personalDataConsent: true;
   telegramConsent: true;
-  consentVersion: "2026-09-17";
-  policyVersion: "2026-09-17";
+  consentVersion: "2026-09-17" | "2026-10-04";
+  policyVersion: "2026-09-17" | "2026-10-04";
 };
 
 const escapeHtml = (value: string) =>
@@ -19,12 +19,33 @@ const escapeHtml = (value: string) =>
 
 const formatRubles = (amount: number) => `${amount.toLocaleString("ru-RU")} ₽`;
 
-export function formatLeadMessage(lead: LeadNotification): string {
+export type LeadDeliveryOptions = {
+  /** ISO time the lead was received, set when it is delivered by a later retry. */
+  delayedSince?: string;
+};
+
+const TELEGRAM_TIMEOUT_MS = 10_000;
+
+const formatMoscowTime = (iso: string) =>
+  new Date(iso).toLocaleString("ru-RU", {
+    timeZone: "Europe/Moscow",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+export function formatLeadMessage(lead: LeadNotification, options: LeadDeliveryOptions = {}): string {
   const source = lead.source === "calculator" ? "Калькулятор" : "Контактная форма";
+  const delayNote = options.delayedSince
+    ? [`⚠️ <b>Доставлено с задержкой.</b> Заявка получена ${formatMoscowTime(options.delayedSince)} (МСК)`, ""]
+    : [];
 
   return [
     "<b>Новая заявка — Классный Ремонт</b>",
     "",
+    ...delayNote,
     `<b>Источник:</b> ${source}`,
     `<b>Клиент:</b> ${escapeHtml(lead.name)}`,
     `<b>Телефон:</b> ${escapeHtml(lead.phone)}`,
@@ -48,6 +69,7 @@ export async function sendLeadToTelegram(
     token: process.env.TELEGRAM_BOT_TOKEN ?? "",
     chatId: process.env.TELEGRAM_CHAT_ID ?? "",
   },
+  options: LeadDeliveryOptions = {},
 ): Promise<void> {
   if (!config.token || !config.chatId) {
     throw new Error("Telegram is not configured");
@@ -58,10 +80,11 @@ export async function sendLeadToTelegram(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: config.chatId,
-      text: formatLeadMessage(lead),
+      text: formatLeadMessage(lead, options),
       parse_mode: "HTML",
       disable_web_page_preview: true,
     }),
+    signal: AbortSignal.timeout(TELEGRAM_TIMEOUT_MS),
   });
 
   if (!response.ok) {

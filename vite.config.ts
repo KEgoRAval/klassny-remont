@@ -150,10 +150,17 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+// The Manus editor runtime, source-location stamps and debug collector are
+// development tooling. In a production build they would inline ~370 kB of
+// script into every page and expose source paths, so they are left out.
+export function createPlugins(isProduction: boolean) {
+  const sitePlugins = [react(), tailwindcss()];
+  if (isProduction) return sitePlugins;
+  return [...sitePlugins, jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+}
 
 export default defineConfig({
-  plugins,
+  plugins: createPlugins(process.env.NODE_ENV === "production"),
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),

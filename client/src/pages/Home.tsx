@@ -20,17 +20,19 @@ import {
 import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import { TELEGRAM_URL, WHATSAPP_URL } from "@/components/MessengerQuickActions";
+import { imageSize, siteImages } from "@/content/media";
+import { reachLeadGoal } from "@/lib/metrika";
 
 const images = {
-  hero: "/manus-storage/hero-living-room_277d141a.jpg",
-  veryLiving: "/manus-storage/very-enhanced-living_6019bd19.png",
-  veryEntry: "/manus-storage/very-enhanced-entry_0f41baa0.png",
-  veryBedroom: "/manus-storage/very-enhanced-bedroom_262c2040.png",
-  veryBathroom: "/manus-storage/very-enhanced-bathroom_c918e00d.png",
-  everLiving: "/manus-storage/ever-enhanced-living_6eb96fe0.png",
-  everEntry: "/manus-storage/ever-enhanced-entry_054ed219.png",
-  everBedroom: "/manus-storage/ever-enhanced-bedroom_5f368637.png",
-  everShower: "/manus-storage/ever-enhanced-shower_967e9d92.png",
+  hero: siteImages.hero.src,
+  veryLiving: siteImages.veryLiving.src,
+  veryEntry: siteImages.veryEntry.src,
+  veryBedroom: siteImages.veryBedroom.src,
+  veryBathroom: siteImages.veryBathroom.src,
+  everLiving: siteImages.everLiving.src,
+  everEntry: siteImages.everEntry.src,
+  everBedroom: siteImages.everBedroom.src,
+  everShower: siteImages.everShower.src,
 };
 
 const projectCards = [
@@ -90,6 +92,7 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
   const [showConsentValidation, setShowConsentValidation] = useState(false);
   const submitLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
+      reachLeadGoal("lead_calculator");
       onSuccess(name);
       setName("");
       setPhone("");
@@ -119,8 +122,8 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
         <h2 id="modal-title">Запишитесь на замер</h2>
         <p className="modal-copy">Обсудим задачу, подскажем реалистичный бюджет и подготовим предварительный расчёт за 24 часа.</p>
         <form onSubmit={handleSubmit} className="modal-form">
-          <label>Как к вам обращаться<input value={name} onChange={(e) => setName(e.target.value)} disabled={submitLead.isPending} required placeholder="Ваше имя" /></label>
-          <label>Телефон<input value={phone} onChange={(e) => setPhone(e.target.value)} disabled={submitLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
+          <label>Как к вам обращаться<input className="ym-record-keys" value={name} onChange={(e) => setName(e.target.value)} disabled={submitLead.isPending} required placeholder="Ваше имя" /></label>
+          <label>Телефон<input className="ym-record-keys" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={submitLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
           <PersonalDataConsent formId="lead-modal" personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} showValidation={showConsentValidation} onConsentInvalid={() => setShowConsentValidation(true)} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
           <button className={submitLead.isPending ? "button button-brass form-submit-loading" : "button button-brass"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <SendingContent label="Отправляем заявку" /> : <>Получить расчёт <ArrowRight size={17} /></>}</button>
           {submitLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
@@ -153,6 +156,7 @@ export default function Home() {
   };
   const submitContactLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
+      reachLeadGoal("lead_contact");
       showThankYou(contactName);
       setContactName("");
       setContactPhone("");
@@ -203,7 +207,7 @@ export default function Home() {
 
       <main id="top">
         <section className="hero">
-          <img src={images.hero} alt="Интерьер реализованной гостиной" className="hero-image" />
+          <img src={images.hero} srcSet={siteImages.hero.srcSet} sizes={siteImages.hero.sizes} width={siteImages.hero.width} height={siteImages.hero.height} alt="Интерьер реализованной гостиной" className="hero-image" fetchPriority="high" decoding="async" />
           <div className="hero-overlay"></div>
           <div className="hero-content">
             <div className="hero-kicker"><span className="pulse-dot"></span> Ремонт квартир в Москве</div>
@@ -251,7 +255,7 @@ export default function Home() {
           <div className="project-grid">
             {projectCards.map((project, index) => (
               <article className={`project-card project-${index + 1}`} key={project.image}>
-                <img src={project.image} alt={project.title} loading="lazy" />
+                <img src={project.image} {...imageSize(project.image)} alt={project.title} loading="lazy" decoding="async" />
                 <div className="project-shade"></div>
                 <div className="project-meta"><button aria-label={`Открыть ${project.title}`} onClick={openLead}><ArrowUpRightIcon /></button></div>
                 <div className="project-title"><h3>{project.title}</h3><p>{project.meta}</p></div>
@@ -319,8 +323,8 @@ export default function Home() {
             <div className="contact-copy"><SectionLabel>Начнём с разговора</SectionLabel><h2>Покажите<br />вашу квартиру.<br /><i>Остальное — наша<br />работа.</i></h2><p>Оставьте контакты — обсудим задачу, назначим замер и пришлём предварительный расчёт за 24 часа.</p><div className="contact-direct"><a href="tel:+79779480672"><Phone size={18} />8 (977) 948‑06‑72</a><a href={TELEGRAM_URL} target="_blank" rel="noreferrer"><Send size={18} />Telegram</a><a href={WHATSAPP_URL} target="_blank" rel="noreferrer"><MessageCircle size={18} />WhatsApp</a></div></div>
             <div className="contact-form-wrap">
               <form className="contact-form" onSubmit={submitContactForm}>
-                <label>Ваше имя<input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={submitContactLead.isPending} required placeholder="Как к вам обращаться" /></label>
-                <label>Телефон<input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={submitContactLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
+                <label>Ваше имя<input className="ym-record-keys" value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={submitContactLead.isPending} required placeholder="Как к вам обращаться" /></label>
+                <label>Телефон<input className="ym-record-keys" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={submitContactLead.isPending} required placeholder="+7 (___) ___-__-__" /></label>
                 <label>Что планируете?<select value={contactService} onChange={(e) => setContactService(e.target.value)} disabled={submitContactLead.isPending} required><option value="" disabled>Выберите вариант</option><option>Ремонт квартиры под ключ</option><option>Дизайн-проект + ремонт</option><option>Инженерные системы</option><option>Нужна консультация</option></select></label>
                 <PersonalDataConsent formId="contact-form" personalDataConsent={contactPersonalDataConsent} telegramConsent={contactTelegramConsent} disabled={submitContactLead.isPending} showValidation={showContactConsentValidation} onConsentInvalid={() => setShowContactConsentValidation(true)} onPersonalDataConsentChange={setContactPersonalDataConsent} onTelegramConsentChange={setContactTelegramConsent} />
                 <button type="submit" disabled={submitContactLead.isPending} className={submitContactLead.isPending ? "button button-brass full-width form-submit-loading" : "button button-brass full-width"}>{submitContactLead.isPending ? <SendingContent label="Заявка отправляется" /> : <>Отправить заявку <ArrowRight size={18} /></>}</button>
