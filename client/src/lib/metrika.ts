@@ -3,6 +3,10 @@
  * client/index.html and loads on every page for every visitor; this module
  * only talks to it. The counter number here must match the one in the snippet.
  *
+ * Session recording (Webvisor) is on, and by the owner's decision the name and
+ * phone fields carry the ym-record-keys class, so recordings show what is typed
+ * there. The privacy policy states this.
+ *
  * Goals to create in the Metrika interface as "JavaScript event" goals:
  *   lead             — any form was submitted (use this one for Direct)
  *   lead_calculator  — "Запишитесь на замер" from the calculator

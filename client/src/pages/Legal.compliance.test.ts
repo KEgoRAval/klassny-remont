@@ -63,6 +63,11 @@ describe("personal data legal pages", () => {
     }
   });
 
+  it("tells visitors that what they type into forms is recorded, even if the form is not sent", () => {
+    expect(legal).toContain("Вебвизор записывает и то, что посетитель вводит в поля форм, включая имя и телефон, в том числе если форма не отправлена.");
+    expect(legal).not.toContain("в записи Вебвизора не попадает");
+  });
+
   it("does not promise a separate analytics permission anywhere else in the policy", () => {
     expect(legal).not.toContain("только после отдельного разрешения на cookies");
     expect(legal).toContain("веб‑аналитика (Яндекс Метрика, Umami)");
