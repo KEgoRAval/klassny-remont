@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
+import { loadMetrika, metrikaCounterId, YANDEX_METRIKA_ID } from "@/lib/metrika";
 
 type CookieChoice = "accepted" | "declined" | null;
 const STORAGE_KEY = "klassny-remont-cookie-choice";
 
 function loadAnalytics() {
+  const counterId = metrikaCounterId(YANDEX_METRIKA_ID);
+  if (counterId) loadMetrika(counterId);
+
   const endpoint = (import.meta.env.VITE_ANALYTICS_ENDPOINT as string | undefined)?.replace(/\/+$/, "");
   const websiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID as string | undefined;
   if (!endpoint || !websiteId || document.querySelector("script[data-klassny-remont-analytics]")) return;

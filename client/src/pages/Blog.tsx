@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Clock3, FileText, Phone } f
 import { Link, useParams } from "wouter";
 import { blogPosts, getBlogPost, getRelatedPosts, type BlogPost } from "@/content/blog";
 import { imageSize } from "@/content/media";
+import { reachLeadGoal } from "@/lib/metrika";
 import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import NotFound from "@/pages/NotFound";
@@ -115,6 +116,7 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
   const totalEstimate = workEstimate + materialsEstimate;
   const submitLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
+      reachLeadGoal("lead_blog");
       setSubmitted(true);
       setPhone("");
       setPersonalDataConsent(false);

@@ -21,6 +21,7 @@ import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import { TELEGRAM_URL, WHATSAPP_URL } from "@/components/MessengerQuickActions";
 import { imageSize, siteImages } from "@/content/media";
+import { reachLeadGoal } from "@/lib/metrika";
 
 const images = {
   hero: siteImages.hero.src,
@@ -91,6 +92,7 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
   const [showConsentValidation, setShowConsentValidation] = useState(false);
   const submitLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
+      reachLeadGoal("lead_calculator");
       onSuccess(name);
       setName("");
       setPhone("");
@@ -154,6 +156,7 @@ export default function Home() {
   };
   const submitContactLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
+      reachLeadGoal("lead_contact");
       showThankYou(contactName);
       setContactName("");
       setContactPhone("");
