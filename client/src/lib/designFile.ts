@@ -2,6 +2,9 @@
 export const DESIGN_FILE_MAX_BYTES = 20 * 1024 * 1024;
 export const DESIGN_FILE_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp";
 export const DESIGN_FILE_REJECTED_MESSAGE = "Приложите PDF или изображение (JPG, PNG, WebP) размером до 20 МБ.";
+export const DESIGN_FILE_CONSENT_MESSAGE = "Обновите страницу, чтобы приложить файл: изменился текст согласия.";
+/** Server messages about the file that the form shows as they are; anything else gets the generic error. */
+export const DESIGN_FILE_SERVER_MESSAGES = [DESIGN_FILE_REJECTED_MESSAGE, DESIGN_FILE_CONSENT_MESSAGE];
 
 const ACCEPTED_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 const ACCEPTED_EXTENSIONS = /\.(pdf|jpe?g|png|webp)$/i;

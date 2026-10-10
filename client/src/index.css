@@ -235,6 +235,7 @@ details[open] .k-faq-minus{display:block}
 .k-file-icon{flex:none;width:32px;height:32px;border-radius:999px;background:var(--k-accent-200);color:var(--k-accent-800);display:grid;place-items:center}
 .k-file-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .k-file-field{position:relative;display:flex;flex-direction:column;gap:8px}
+.k-file-hint{padding-inline:18px;font-size:12px;line-height:1.45;color:var(--k-neutral-700)}
 .k-file-chosen{border-style:solid;border-color:var(--k-accent);background:var(--k-accent-100);padding-right:60px}
 .k-file-chosen .k-file-name{min-width:0}
 .k-file-remove{position:absolute;right:10px;top:10px;width:40px;height:40px;border:0;border-radius:999px;background:var(--k-bg);color:var(--k-text);display:grid;place-items:center;cursor:pointer}

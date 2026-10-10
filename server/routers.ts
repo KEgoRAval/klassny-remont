@@ -15,6 +15,9 @@ import { submitLead } from "./leadPipeline";
 import type { LeadNotification } from "./telegram";
 
 export const ATTACHMENT_REJECTED_MESSAGE = "Приложите PDF или изображение (JPG, PNG, WebP) размером до 20 МБ.";
+/** The first consent edition that names an attached file; earlier editions cannot carry one. */
+export const ATTACHMENT_CONSENT_VERSION = "2026-10-10";
+export const ATTACHMENT_CONSENT_MESSAGE = "Обновите страницу, чтобы приложить файл: изменился текст согласия.";
 
 export const leadInput = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(80),
@@ -28,9 +31,9 @@ export const leadInput = z.object({
   source: z.enum(["calculator", "contact"]),
   personalDataConsent: z.literal(true, { error: "Необходимо согласие на обработку персональных данных" }),
   telegramConsent: z.literal(true, { error: "Необходимо согласие на передачу заявки в Telegram" }),
-  // The previous edition is still accepted so a page opened before a release can submit its form.
-  consentVersion: z.enum(["2026-09-17", "2026-10-04"]),
-  policyVersion: z.enum(["2026-09-17", "2026-10-04"]),
+  // Previous editions are still accepted so a page opened before a release can submit its form.
+  consentVersion: z.enum(["2026-09-17", "2026-10-04", "2026-10-10"]),
+  policyVersion: z.enum(["2026-09-17", "2026-10-04", "2026-10-10"]),
   /** Optional design project from the contact form, as base64. Its type is checked from the bytes. */
   attachment: z
     .object({
@@ -41,8 +44,12 @@ export const leadInput = z.object({
 });
 
 /** Turns the submitted file into bytes plus the description the journal keeps. */
-export function readLeadAttachment(attachment: z.infer<typeof leadInput>["attachment"]) {
+export function readLeadAttachment({ attachment, consentVersion, policyVersion }: Pick<z.infer<typeof leadInput>, "attachment" | "consentVersion" | "policyVersion">) {
   if (!attachment) return undefined;
+  // A file may only travel under the consent text that names it.
+  if (consentVersion !== ATTACHMENT_CONSENT_VERSION || policyVersion !== ATTACHMENT_CONSENT_VERSION) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: ATTACHMENT_CONSENT_MESSAGE });
+  }
   const bytes = Buffer.from(attachment.data, "base64");
   const mimeType = detectAttachmentType(bytes);
   if (!mimeType || bytes.length === 0 || bytes.length > MAX_ATTACHMENT_BYTES) {
@@ -67,7 +74,7 @@ export const appRouter = router({
   leads: router({
     submit: publicProcedure.input(leadInput).mutation(async ({ input }) => {
       const { attachment, ...fields } = input;
-      const file = readLeadAttachment(attachment);
+      const file = readLeadAttachment(input);
       const lead: LeadNotification = file ? { ...fields, attachment: file.description } : fields;
       try {
         // The lead is written to disk before Telegram is contacted; see leadPipeline.ts.

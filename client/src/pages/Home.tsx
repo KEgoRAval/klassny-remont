@@ -17,7 +17,7 @@ import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components
 import { TELEGRAM_URL, WHATSAPP_URL } from "@/components/MessengerQuickActions";
 import { imageSize, siteImages } from "@/content/media";
 import { reachLeadGoal } from "@/lib/metrika";
-import { DESIGN_FILE_ACCEPT, DESIGN_FILE_REJECTED_MESSAGE, designFileProblem, formatFileSize, readFileAsBase64 } from "@/lib/designFile";
+import { DESIGN_FILE_ACCEPT, DESIGN_FILE_SERVER_MESSAGES, designFileProblem, formatFileSize, readFileAsBase64 } from "@/lib/designFile";
 
 const images = {
   hero: siteImages.hero.src,
@@ -56,10 +56,10 @@ const navLinks = [
 ];
 
 /**
- * The design-project attachment is delivered to Telegram with the lead. Turn it on together with the
- * consent edition that names attached files (see PersonalDataConsent and the privacy policy).
+ * The design-project attachment is delivered to Telegram with the lead. The consent edition 2026-10-10
+ * names attached files; the server refuses a file sent under an earlier edition.
  */
-const DESIGN_FILE_UPLOAD_ENABLED = false;
+const DESIGN_FILE_UPLOAD_ENABLED = true;
 
 const ICON_STROKE = 2.75;
 
@@ -412,12 +412,12 @@ export default function Home() {
                       {contactFile ? <span className="k-file-name">{contactFile.name} <span className="k-muted">· {formatFileSize(contactFile.size)}</span></span> : <span>Прикрепить дизайн-проект <span className="k-muted">· PDF, необязательно</span></span>}
                     </label>
                     {contactFile && <button type="button" className="k-file-remove" onClick={() => setContactFile(null)} disabled={contactSending} aria-label="Убрать файл"><X size={16} strokeWidth={ICON_STROKE} /></button>}
-                    {contactFileError && <p className="form-error" id="contact-file-error" role="alert">{contactFileError}</p>}
+                    {contactFileError ? <p className="form-error" id="contact-file-error" role="alert">{contactFileError}</p> : <small className="k-file-hint">Файл увидит только команда «Классного ремонта». Не прикладывайте паспортные данные и другие документы, не нужные для расчёта.</small>}
                   </div>
                 )}
                 <PersonalDataConsent formId="contact-form" personalDataConsent={contactPersonalDataConsent} telegramConsent={contactTelegramConsent} disabled={submitContactLead.isPending} showValidation={showContactConsentValidation} onConsentInvalid={() => setShowContactConsentValidation(true)} onPersonalDataConsentChange={setContactPersonalDataConsent} onTelegramConsentChange={setContactTelegramConsent} />
                 <button type="submit" disabled={contactSending} className={contactSending ? "btn btn-primary k-btn-lg k-btn-block form-submit-loading" : "btn btn-primary k-btn-lg k-btn-block"}>{contactSending ? <SendingContent label="Заявка отправляется" /> : <>Отправить заявку <ArrowRight size={18} strokeWidth={ICON_STROKE} /></>}</button>
-                {submitContactLead.isError && <p className="form-error">{submitContactLead.error.message === DESIGN_FILE_REJECTED_MESSAGE ? DESIGN_FILE_REJECTED_MESSAGE : "Не удалось отправить заявку. Позвоните нам или повторите попытку."}</p>}
+                {submitContactLead.isError && <p className="form-error">{DESIGN_FILE_SERVER_MESSAGES.includes(submitContactLead.error.message) ? submitContactLead.error.message : "Не удалось отправить заявку. Позвоните нам или повторите попытку."}</p>}
                 <small className="k-form-footnote">Без рекламных рассылок. Только ответ по вашему проекту.</small>
               </form>
             </div>

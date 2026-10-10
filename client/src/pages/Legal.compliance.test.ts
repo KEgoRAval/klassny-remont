@@ -74,8 +74,18 @@ describe("personal data legal pages", () => {
   });
 
   it("publishes the changed policy and the consent text that names it under one new edition date", () => {
-    expect(legal).toContain('const CONSENT_VERSION = "2026-10-04"');
-    expect(personalDataConsent).toContain('export const PERSONAL_DATA_CONSENT_VERSION = "2026-10-04"');
+    expect(legal).toContain('const CONSENT_VERSION = "2026-10-10"');
+    expect(personalDataConsent).toContain('export const PERSONAL_DATA_CONSENT_VERSION = "2026-10-10"');
+  });
+
+  it("names an attached design project in both consents and in the policy", () => {
+    expect(personalDataConsent).toContain("параметров запроса и сведений в приложенном мной файле (если я его приложил)");
+    expect(personalDataConsent).toContain("указанных в заявке данных и приложенного файла через мессенджер Telegram");
+    expect(legal).toContain("<td>Файл дизайн-проекта или планировки (по желанию пользователя)</td>");
+    expect(legal).toContain("хранится на сервере Оператора только до его передачи Оператору через Telegram и затем удаляется с сервера");
+    expect(legal).toContain("имя, телефон, параметры запроса и приложенный пользователем файл — направляются в Telegram");
+    expect(legal).toContain("сведений, содержащихся в файле дизайн-проекта или планировки, если пользователь его приложил");
+    expect(legal).toContain("параметров заявки и приложенного файла через Telegram");
   });
 
   it("exposes an accessible custom error hint for unconfirmed consents", () => {

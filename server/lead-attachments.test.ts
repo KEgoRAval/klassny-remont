@@ -9,7 +9,7 @@ import {
   MAX_ATTACHMENT_BYTES,
   safeAttachmentName,
 } from "./leadAttachments";
-import { ATTACHMENT_REJECTED_MESSAGE, leadInput, readLeadAttachment } from "./routers";
+import { ATTACHMENT_CONSENT_MESSAGE, ATTACHMENT_REJECTED_MESSAGE, leadInput, readLeadAttachment } from "./routers";
 
 const bytes = (...values: number[]) => new Uint8Array(values);
 const pdf = new TextEncoder().encode("%PDF-1.7\n%design project");
@@ -91,9 +91,10 @@ describe("leads.submit attachment input", () => {
     source: "contact" as const,
     personalDataConsent: true as const,
     telegramConsent: true as const,
-    consentVersion: "2026-10-04" as const,
-    policyVersion: "2026-10-04" as const,
+    consentVersion: "2026-10-10" as const,
+    policyVersion: "2026-10-10" as const,
   };
+  const withFile = (data: Uint8Array, fileName = "план.pdf") => ({ ...validLead, attachment: { fileName, data: base64(data) } });
 
   it("accepts a lead with or without a file", () => {
     expect(leadInput.safeParse(validLead).success).toBe(true);
@@ -106,19 +107,26 @@ describe("leads.submit attachment input", () => {
   });
 
   it("describes an accepted file by its real type and size", () => {
-    const file = readLeadAttachment({ fileName: "план кухни.PDF", data: base64(pdf) });
+    const file = readLeadAttachment(withFile(pdf, "план кухни.PDF"));
 
     expect(file?.description).toEqual({ fileName: "план кухни.pdf", mimeType: "application/pdf", size: pdf.length });
     expect(new Uint8Array(file!.bytes)).toEqual(pdf);
   });
 
   it("turns away a file that is not a PDF or an image with a message the form can show", () => {
-    const fake = { fileName: "проект.pdf", data: base64(new TextEncoder().encode("MZ not a pdf")) };
+    const fake = withFile(new TextEncoder().encode("MZ not a pdf"), "проект.pdf");
 
     expect(() => readLeadAttachment(fake)).toThrow(ATTACHMENT_REJECTED_MESSAGE);
   });
 
-  it("needs no file at all", () => {
-    expect(readLeadAttachment(undefined)).toBeUndefined();
+  it("needs no file at all, under any consent edition", () => {
+    expect(readLeadAttachment(validLead)).toBeUndefined();
+    expect(readLeadAttachment({ ...validLead, consentVersion: "2026-10-04", policyVersion: "2026-10-04" })).toBeUndefined();
+  });
+
+  it("refuses a file sent under a consent edition that does not name attached files", () => {
+    const fromOldPage = { ...withFile(pdf), consentVersion: "2026-10-04" as const, policyVersion: "2026-10-04" as const };
+
+    expect(() => readLeadAttachment(fromOldPage)).toThrow(ATTACHMENT_CONSENT_MESSAGE);
   });
 });

@@ -152,9 +152,11 @@ describe("lead form feedback", () => {
     }
   });
 
-  it("keeps the design-project upload hidden until the lead backend accepts files", () => {
-    expect(source).toContain("const DESIGN_FILE_UPLOAD_ENABLED = false;");
-    expect(source).toContain("{DESIGN_FILE_UPLOAD_ENABLED && (");
+  it("offers the design-project upload in the contact form with a note on what not to attach", () => {
+    expect(source).toContain("const DESIGN_FILE_UPLOAD_ENABLED = true;");
+    expect(source).toContain("accept={DESIGN_FILE_ACCEPT}");
+    expect(source).toContain("attachment });");
+    expect(source).toContain("Не прикладывайте паспортные данные и другие документы, не нужные для расчёта.");
   });
 
   it("provides machine-readable pricing and company information", () => {

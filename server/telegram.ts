@@ -12,8 +12,8 @@ export type LeadNotification = {
   source: "calculator" | "contact";
   personalDataConsent: true;
   telegramConsent: true;
-  consentVersion: "2026-09-17" | "2026-10-04";
-  policyVersion: "2026-09-17" | "2026-10-04";
+  consentVersion: "2026-09-17" | "2026-10-04" | "2026-10-10";
+  policyVersion: "2026-09-17" | "2026-10-04" | "2026-10-10";
   /** A design project the client attached to the contact form. */
   attachment?: LeadAttachment;
 };
