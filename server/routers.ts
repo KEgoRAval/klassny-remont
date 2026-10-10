@@ -4,8 +4,17 @@ import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
+import {
+  detectAttachmentType,
+  MAX_ATTACHMENT_BASE64_LENGTH,
+  MAX_ATTACHMENT_BYTES,
+  safeAttachmentName,
+} from "./leadAttachments";
 import { leadPipelineDeps } from "./leadService";
 import { submitLead } from "./leadPipeline";
+import type { LeadNotification } from "./telegram";
+
+export const ATTACHMENT_REJECTED_MESSAGE = "Приложите PDF или изображение (JPG, PNG, WebP) размером до 20 МБ.";
 
 export const leadInput = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(80),
@@ -22,7 +31,28 @@ export const leadInput = z.object({
   // The previous edition is still accepted so a page opened before a release can submit its form.
   consentVersion: z.enum(["2026-09-17", "2026-10-04"]),
   policyVersion: z.enum(["2026-09-17", "2026-10-04"]),
+  /** Optional design project from the contact form, as base64. Its type is checked from the bytes. */
+  attachment: z
+    .object({
+      fileName: z.string().trim().min(1).max(255),
+      data: z.string().min(1).max(MAX_ATTACHMENT_BASE64_LENGTH, ATTACHMENT_REJECTED_MESSAGE),
+    })
+    .optional(),
 });
+
+/** Turns the submitted file into bytes plus the description the journal keeps. */
+export function readLeadAttachment(attachment: z.infer<typeof leadInput>["attachment"]) {
+  if (!attachment) return undefined;
+  const bytes = Buffer.from(attachment.data, "base64");
+  const mimeType = detectAttachmentType(bytes);
+  if (!mimeType || bytes.length === 0 || bytes.length > MAX_ATTACHMENT_BYTES) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: ATTACHMENT_REJECTED_MESSAGE });
+  }
+  return {
+    bytes,
+    description: { fileName: safeAttachmentName(attachment.fileName, mimeType), mimeType, size: bytes.length },
+  };
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -36,9 +66,12 @@ export const appRouter = router({
   }),
   leads: router({
     submit: publicProcedure.input(leadInput).mutation(async ({ input }) => {
+      const { attachment, ...fields } = input;
+      const file = readLeadAttachment(attachment);
+      const lead: LeadNotification = file ? { ...fields, attachment: file.description } : fields;
       try {
         // The lead is written to disk before Telegram is contacted; see leadPipeline.ts.
-        await submitLead(input, leadPipelineDeps());
+        await submitLead(lead, leadPipelineDeps(), file?.bytes);
         return { success: true } as const;
       } catch (error) {
         console.error("[Lead notification]", error);
