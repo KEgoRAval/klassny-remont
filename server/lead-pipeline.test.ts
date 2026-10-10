@@ -1,7 +1,8 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createAttachmentStore, type LeadAttachmentStore } from "./leadAttachments";
 import { createLeadJournal, type LeadJournal } from "./leadJournal";
 import { retryPendingLeads, submitLead, type LeadPipelineDeps } from "./leadPipeline";
 import type { LeadNotification } from "./telegram";
@@ -13,8 +14,6 @@ const sampleLead: LeadNotification = {
   area: 100,
   materialLabel: "Рациональный",
   workEstimate: 4_000_000,
-  materialsEstimate: 2_200_000,
-  totalEstimate: 6_200_000,
   source: "calculator",
   personalDataConsent: true,
   telegramConsent: true,
@@ -30,12 +29,14 @@ describe("lead pipeline", () => {
   let dir = "";
   let journal: LeadJournal;
   let now = new Date("2026-10-04T12:00:00Z");
-  let sent: Array<{ lead: LeadNotification; delayedSince?: string }> = [];
+  let attachments: LeadAttachmentStore;
+  let sent: Array<{ lead: LeadNotification; delayedSince?: string; attachment?: Uint8Array }> = [];
   let consents: string[] = [];
   const deps = (overrides: Partial<LeadPipelineDeps> = {}): LeadPipelineDeps => ({
     journal,
+    attachments,
     sendToTelegram: async (lead, options) => {
-      sent.push({ lead, delayedSince: options?.delayedSince });
+      sent.push({ lead, delayedSince: options?.delayedSince, attachment: options?.attachment });
     },
     recordConsent: async lead => {
       consents.push(lead.phone);
@@ -48,6 +49,7 @@ describe("lead pipeline", () => {
     dir = mkdtempSync(join(tmpdir(), "lead-pipeline-"));
     now = new Date("2026-10-04T12:00:00Z");
     journal = createLeadJournal(join(dir, "leads.jsonl"), () => now);
+    attachments = createAttachmentStore(join(dir, "attachments"));
     sent = [];
     consents = [];
   });
@@ -177,6 +179,77 @@ describe("lead pipeline", () => {
       await retryPendingLeads(deps({ journal: cannotMark }));
 
       expect(sent).toHaveLength(1);
+    });
+  });
+
+  describe("with an attached design project", () => {
+    const pdf = new TextEncoder().encode("%PDF-1.7 design project");
+    const leadWithFile: LeadNotification = {
+      ...sampleLead,
+      source: "contact",
+      attachment: { fileName: "Проект.pdf", mimeType: "application/pdf", size: pdf.length },
+    };
+    const storedFiles = () => (existsSync(join(dir, "attachments")) ? readdirSync(join(dir, "attachments")) : []);
+
+    it("stores the file before the lead is journaled and sends both together", async () => {
+      let filesWhenJournaled = -1;
+      const watching: LeadJournal = {
+        ...journal,
+        record: async lead => {
+          filesWhenJournaled = storedFiles().length;
+          return journal.record(lead);
+        },
+      };
+
+      await submitLead(leadWithFile, deps({ journal: watching }), pdf);
+
+      expect(filesWhenJournaled).toBe(1);
+      expect(sent).toHaveLength(1);
+      expect(sent[0]?.attachment).toEqual(pdf);
+      expect(sent[0]?.lead.attachment?.storedAs).toMatch(/^[0-9a-f-]{36}\.pdf$/);
+    });
+
+    it("deletes the server copy once Telegram has the file", async () => {
+      await submitLead(leadWithFile, deps(), pdf);
+
+      expect(storedFiles()).toEqual([]);
+    });
+
+    it("keeps the file while Telegram is down and sends it with the retried lead", async () => {
+      await submitLead(leadWithFile, deps({ sendToTelegram: telegramDown }), pdf);
+      expect(storedFiles()).toHaveLength(1);
+      now = new Date("2026-10-04T12:05:00Z");
+
+      expect(await retryPendingLeads(deps())).toBe(1);
+
+      expect(new Uint8Array(sent[0]!.attachment!)).toEqual(pdf);
+      expect(sent[0]?.delayedSince).toBe("2026-10-04T12:00:00.000Z");
+      expect(storedFiles()).toEqual([]);
+    });
+
+    it("still delivers the lead when the file cannot be stored", async () => {
+      const brokenStore: LeadAttachmentStore = {
+        ...attachments,
+        save: async () => {
+          throw new Error("ENOSPC");
+        },
+      };
+
+      const result = await submitLead(leadWithFile, deps({ attachments: brokenStore }), pdf);
+
+      expect(result).toEqual({ saved: true, delivered: true });
+      expect(sent[0]?.attachment).toEqual(pdf);
+      expect(sent[0]?.lead.attachment?.storedAs).toBeUndefined();
+    });
+
+    it("retries a lead whose file went missing, telling the manager instead of losing the lead", async () => {
+      await submitLead(leadWithFile, deps({ sendToTelegram: telegramDown }), pdf);
+      rmSync(join(dir, "attachments"), { recursive: true, force: true });
+      now = new Date("2026-10-04T12:05:00Z");
+
+      expect(await retryPendingLeads(deps())).toBe(1);
+      expect(sent[0]?.attachment).toBeUndefined();
+      expect(sent[0]?.lead.attachment?.fileName).toBe("Проект.pdf");
     });
   });
 });

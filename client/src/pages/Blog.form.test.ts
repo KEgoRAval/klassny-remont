@@ -18,7 +18,7 @@ describe("residential complex estimate form", () => {
     expect(source).toContain("setSubmitted(true)");
   });
 
-  it("requires separate processing and Telegram consent before submission", () => {
+  it("requires consent to processing and Telegram delivery before submission", () => {
     expect(source).toContain("PersonalDataConsent");
     expect(source).toContain("if (!personalDataConsent || !telegramConsent) { setShowConsentValidation(true); return; }");
     expect(source).toContain("personalDataConsent, telegramConsent");
@@ -29,6 +29,8 @@ describe("residential complex estimate form", () => {
 
   it("keeps the price estimate transparent without showing materials ratio", () => {
     expect(source).toContain("area * 40_000");
+    expect(source).not.toContain("materialsEstimate");
+    expect(source).not.toContain("totalEstimate");
     expect(source).toContain("Материалы и индивидуальные решения — отдельной строкой после замера.");
     expect(source).not.toContain("≈ 55% от стоимости работ");
   });

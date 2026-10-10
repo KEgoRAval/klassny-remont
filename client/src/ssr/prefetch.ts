@@ -17,7 +17,7 @@ export type HeadMeta = {
 
 export const SITE_NAME = "Классный Ремонт";
 export const HOME_TITLE = "Ремонт квартир под ключ в Москве — Классный Ремонт";
-export const HOME_DESCRIPTION = "Ремонт квартир бизнес- и премиум-класса в Москве от 40 000 ₽/м² за работы. Смета и сроки фиксируются в договоре. Предварительный расчёт за 24 часа.";
+export const HOME_DESCRIPTION = "Ремонт квартир бизнес- и премиум-класса в Москве от 40 000 ₽/м² за работы. Смета и сроки фиксируются в договоре. Предварительный расчёт за 2 часа.";
 
 export function prefetchForPath(url: string): HeadMeta {
   let pathOnly = url.split("?")[0];

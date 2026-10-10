@@ -23,7 +23,7 @@ describe("lead form feedback", () => {
     expect(source).toContain("<ThankYouModal name={thankYouName}");
   });
 
-  it("requires separate consent for processing and Telegram delivery in every homepage form", () => {
+  it("requires consent to processing and Telegram delivery in every homepage form", () => {
     expect(source).toContain("<PersonalDataConsent formId=\"lead-modal\"");
     expect(source).toContain("<PersonalDataConsent formId=\"contact-form\"");
     expect(source).toContain("setShowConsentValidation(true)");
@@ -36,7 +36,7 @@ describe("lead form feedback", () => {
 
   it("uses a 40,000 ₽/m² rational renovation rate without exposing material ratios", () => {
     expect(source).toContain("const workRate = 40_000");
-    expect(source).toContain("const materialsRatio = 0.55");
+    expect(source).not.toContain("materialsRatio");
     expect(source).toContain("Рациональный ремонт — от 40 000 ₽/м²");
     expect(source).toContain("Материалы — отдельной строкой в смете");
     expect(source).not.toContain("≈ 55% от стоимости работ");
@@ -111,6 +111,53 @@ describe("lead form feedback", () => {
     expect(seo).toContain('"@type": "FAQPage"');
     expect(seo).toContain('"HomeAndConstructionBusiness"');
     expect(seo).toContain('areaServed');
+  });
+
+  it("promises a preliminary estimate within 2 hours everywhere", () => {
+    const blog = readFileSync(resolve(process.cwd(), "client/src/pages/Blog.tsx"), "utf8");
+    const llmsFull = readFileSync(resolve(process.cwd(), "client/public/llms-full.txt"), "utf8");
+    for (const [name, text] of Object.entries({ home: source, blog, seo, llms, llmsFull, pricing })) {
+      expect(text, name).not.toMatch(/24\s*час/);
+    }
+    expect(source).toContain("<b>Смета</b><span>за 2 часа</span>");
+    expect(source).toContain("Получить смету за 2 часа");
+    expect(source).toContain("пришлём предварительный расчёт за 2 часа");
+    expect(source).toContain("<b>в течение 2 часов</b>");
+    expect(seo).toContain("Предварительный расчёт за 2 часа.");
+    expect(pricing).toContain("в течение 2 часов");
+  });
+
+  it("shows only the cost of work in the calculator", () => {
+    expect(source).toContain("<span>Стоимость работ</span><output");
+    expect(source).toContain("от {workEstimate.toLocaleString(\"ru-RU\")} ₽");
+    expect(source).toContain('const calculator = { area, materialLabel: "Рациональный", workEstimate };');
+    expect(source).not.toContain("totalEstimate");
+    expect(source).not.toContain("materialsEstimate");
+  });
+
+  it("uses the 1a wordmark in the header and footer and the 1a icon as favicon", () => {
+    const html = readFileSync(resolve(process.cwd(), "client/index.html"), "utf8");
+    expect(source).toContain('<KremLogo />');
+    expect(source).toContain('<KremLogo size="footer" />');
+    expect(source).not.toContain("brand-mark");
+    expect(html).toContain('<link rel="icon" href="/krem-icon.svg"');
+  });
+
+  it("ships the logo files with the lettering converted to outlines", () => {
+    for (const file of ["krem-logo.svg", "krem-icon.svg"]) {
+      const svg = readFileSync(resolve(process.cwd(), "client/public", file), "utf8");
+      expect(svg, file).not.toContain("<text");
+      expect(svg, file).not.toContain("font-family");
+      expect(svg, file).toContain("<path");
+      expect(svg, file).toContain('role="img"');
+    }
+  });
+
+  it("offers the design-project upload in the contact form with a note on what not to attach", () => {
+    expect(source).toContain("const DESIGN_FILE_UPLOAD_ENABLED = true;");
+    expect(source).toContain("accept={DESIGN_FILE_ACCEPT}");
+    expect(source).toContain("attachment });");
+    expect(source).toContain("Не прикладывайте паспортные данные и другие документы, не нужные для расчёта.");
   });
 
   it("provides machine-readable pricing and company information", () => {

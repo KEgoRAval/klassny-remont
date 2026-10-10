@@ -74,8 +74,29 @@ describe("personal data legal pages", () => {
   });
 
   it("publishes the changed policy and the consent text that names it under one new edition date", () => {
-    expect(legal).toContain('const CONSENT_VERSION = "2026-10-04"');
-    expect(personalDataConsent).toContain('export const PERSONAL_DATA_CONSENT_VERSION = "2026-10-04"');
+    expect(legal).toContain('const CONSENT_VERSION = "2026-10-10"');
+    expect(personalDataConsent).toContain('export const PERSONAL_DATA_CONSENT_VERSION = "2026-10-10"');
+  });
+
+  it("names an attached design project in both consents and in the policy", () => {
+    expect(personalDataConsent).toContain("параметров запроса и сведений в приложенном мной файле (если я его приложил)");
+    expect(personalDataConsent).toContain("в том числе на их передачу через мессенджер Telegram");
+    expect(legal).toContain("<td>Файл дизайн-проекта или планировки (по желанию пользователя)</td>");
+    expect(legal).toContain("хранится на сервере Оператора только до его передачи Оператору через Telegram и затем удаляется с сервера");
+    expect(legal).toContain("имени, телефона, параметров запроса и приложенного пользователем файла — в Telegram");
+    expect(legal).toContain("сведений, содержащихся в файле дизайн-проекта или планировки, если пользователь его приложил");
+    expect(legal).toContain("параметров заявки и приложенного файла через Telegram");
+  });
+
+  it("asks for one consent that names both the processing and the Telegram delivery", () => {
+    expect(personalDataConsent.match(/type="checkbox"/g)).toHaveLength(1);
+    expect(personalDataConsent).toContain("onPersonalDataConsentChange(value);");
+    expect(personalDataConsent).toContain("onTelegramConsentChange(value);");
+    expect(personalDataConsent).toContain("Пожалуйста, подтвердите согласие, чтобы отправить заявку.");
+    expect(legal).toContain("присоединяется одной отметкой в форме");
+    expect(legal).toContain("Та же отметка включает согласие на передачу");
+    expect(legal).not.toContain("вторую отметку");
+    expect(legal).not.toContain("отдельного, необязательного");
   });
 
   it("exposes an accessible custom error hint for unconfirmed consents", () => {

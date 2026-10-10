@@ -69,7 +69,7 @@ assert_contains "$privacy_policy" 'Передача заявки через Tele
 
 consent_page="$(curl -fsS --compressed -A "$UA" "$BASE/personal-data-consent")"
 assert_contains "$consent_page" '<title>Согласие на обработку персональных данных — Классный Ремонт</title>' 'Consent page title is present'
-assert_contains "$consent_page" 'Отдельное согласие на Telegram' 'Consent page is server-rendered'
+assert_contains "$consent_page" 'Согласие на передачу через Telegram' 'Consent page is server-rendered'
 
 llms="$(curl -fsS "$BASE/llms.txt")"
 assert_contains "$llms" 'ИП Бережной Егор Юрьевич' 'llms.txt contains legal entity'

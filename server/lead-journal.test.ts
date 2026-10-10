@@ -11,8 +11,6 @@ const sampleLead = {
   area: 100,
   materialLabel: "Рациональный",
   workEstimate: 4_000_000,
-  materialsEstimate: 2_200_000,
-  totalEstimate: 6_200_000,
   source: "calculator" as const,
   personalDataConsent: true as const,
   telegramConsent: true as const,
@@ -38,7 +36,7 @@ describe("lead journal", () => {
     expect(readFileSync(file, "utf8")).toContain("+7 999 123 45 67");
     const pending = await journal.pending();
     expect(pending).toHaveLength(1);
-    expect(pending[0]).toMatchObject({ id, lead: { name: "Анна", totalEstimate: 6_200_000 } });
+    expect(pending[0]).toMatchObject({ id, lead: { name: "Анна", workEstimate: 4_000_000 } });
   });
 
   it("keeps the journal readable by the site user only", async () => {

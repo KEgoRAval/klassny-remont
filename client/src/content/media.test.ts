@@ -64,9 +64,9 @@ describe("self-hosted media", () => {
 
   it("declares every font face from a woff2 file shipped in the project", () => {
     const fontUrls = [...source("client/index.html").matchAll(/url\("([^"]+)"\)/g)].map(match => match[1]);
-    expect(fontUrls.length).toBe(9);
+    expect(fontUrls.length).toBe(23);
     for (const url of fontUrls) {
-      expect(url).toMatch(/^\/fonts\/[a-z]+-\d{3}\.woff2$/);
+      expect(url).toMatch(/^\/fonts\/[a-z]+-\d{3}(-(latin|cyrillic))?\.woff2$/);
       expect(onDisk(url), url).toBe(true);
     }
   });

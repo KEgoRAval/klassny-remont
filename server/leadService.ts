@@ -1,5 +1,6 @@
 import path from "node:path";
 import { createLeadConsent } from "./db";
+import { createAttachmentStore } from "./leadAttachments";
 import { createLeadJournal } from "./leadJournal";
 import { retryPendingLeads, type LeadPipelineDeps } from "./leadPipeline";
 import { sendLeadToTelegram } from "./telegram";
@@ -14,9 +15,13 @@ const RETRY_INTERVAL_MS = 2 * 60 * 1000;
 export const leadJournalPath = () =>
   process.env.LEADS_JOURNAL_PATH || path.resolve(process.cwd(), "data", "leads.jsonl");
 
+/** Client files waiting for Telegram, kept next to the journal so they survive releases too. */
+export const leadAttachmentsPath = () => path.join(path.dirname(leadJournalPath()), "attachments");
+
 export function leadPipelineDeps(): LeadPipelineDeps {
   return {
     journal: createLeadJournal(leadJournalPath()),
+    attachments: createAttachmentStore(leadAttachmentsPath()),
     sendToTelegram: (lead, options) => sendLeadToTelegram(lead, fetch, undefined, options),
     recordConsent: lead =>
       createLeadConsent({

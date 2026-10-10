@@ -12,8 +12,6 @@ const validLead = {
   area: 100,
   materialLabel: "Рациональный",
   workEstimate: 4_000_000,
-  materialsEstimate: 2_200_000,
-  totalEstimate: 6_200_000,
   source: "calculator" as const,
   personalDataConsent: true as const,
   telegramConsent: true as const,
