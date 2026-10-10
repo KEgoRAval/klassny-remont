@@ -86,8 +86,6 @@ describe("leads.submit attachment input", () => {
     area: 100,
     materialLabel: "Рациональный",
     workEstimate: 4_000_000,
-    materialsEstimate: 2_200_000,
-    totalEstimate: 6_200_000,
     source: "contact" as const,
     personalDataConsent: true as const,
     telegramConsent: true as const,

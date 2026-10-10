@@ -26,8 +26,9 @@ export const leadInput = z.object({
   area: z.number().int().min(50).max(250),
   materialLabel: z.string().trim().min(2).max(80),
   workEstimate: z.number().int().min(0).max(50_000_000),
-  materialsEstimate: z.number().int().min(0).max(50_000_000),
-  totalEstimate: z.number().int().min(0).max(100_000_000),
+  // Sent by pages opened before the calculator switched to the cost of work only; accepted and dropped.
+  materialsEstimate: z.number().int().min(0).max(50_000_000).optional(),
+  totalEstimate: z.number().int().min(0).max(100_000_000).optional(),
   source: z.enum(["calculator", "contact"]),
   personalDataConsent: z.literal(true, { error: "Необходимо согласие на обработку персональных данных" }),
   telegramConsent: z.literal(true, { error: "Необходимо согласие на передачу заявки в Telegram" }),
@@ -73,7 +74,7 @@ export const appRouter = router({
   }),
   leads: router({
     submit: publicProcedure.input(leadInput).mutation(async ({ input }) => {
-      const { attachment, ...fields } = input;
+      const { attachment, materialsEstimate: _materials, totalEstimate: _total, ...fields } = input;
       const file = readLeadAttachment(input);
       const lead: LeadNotification = file ? { ...fields, attachment: file.description } : fields;
       try {

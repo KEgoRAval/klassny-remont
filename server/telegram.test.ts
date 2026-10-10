@@ -8,8 +8,6 @@ const sampleLead = {
   area: 100,
   materialLabel: "Рациональный",
   workEstimate: 4_000_000,
-  materialsEstimate: 2_200_000,
-  totalEstimate: 6_200_000,
   source: "calculator" as const,
   personalDataConsent: true as const,
   telegramConsent: true as const,
@@ -24,8 +22,10 @@ describe("Telegram lead delivery", () => {
     expect(message).toContain("<b>Новая заявка — Классный Ремонт</b>");
     expect(message).toContain("Анна &lt;тест&gt;");
     expect(message).toContain("100 м²");
-    expect(message).toContain("Рациональный");
-    expect(message).toContain("6 200 000 ₽");
+    expect(message).toContain("<b>Уровень ремонта:</b> Рациональный");
+    expect(message).toContain("<b>Работы:</b> от 4 000 000 ₽");
+    expect(message).not.toContain("Ориентир");
+    expect(message).not.toContain("<b>Материалы:</b> от");
     expect(message).toContain("обработка ПД и передача в Telegram — получены (2026-09-17)");
   });
 

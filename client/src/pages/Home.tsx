@@ -86,8 +86,6 @@ type CalculatorDetails = {
   area: number;
   materialLabel: string;
   workEstimate: number;
-  materialsEstimate: number;
-  totalEstimate: number;
 };
 
 function SendingContent({ label }: { label: string }) {
@@ -176,12 +174,9 @@ export default function Home() {
   const [contactTelegramConsent, setContactTelegramConsent] = useState(false);
   const [showContactConsentValidation, setShowContactConsentValidation] = useState(false);
   const workRate = 40_000;
-  // Materials are not shown on the page; the ratio only feeds the internal estimate sent with a lead.
-  const materialsRatio = 0.55;
+  // The calculator estimates the cost of work only; materials go into the estimate as a separate line.
   const workEstimate = area * workRate;
-  const materialsEstimate = Math.round(workEstimate * materialsRatio);
-  const totalEstimate = workEstimate + materialsEstimate;
-  const calculator = { area, materialLabel: "Рациональный", workEstimate, materialsEstimate, totalEstimate };
+  const calculator = { area, materialLabel: "Рациональный", workEstimate };
   const showThankYou = (name: string) => {
     setLeadOpen(false);
     setThankYouName(name);

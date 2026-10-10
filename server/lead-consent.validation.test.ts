@@ -8,8 +8,6 @@ const validLead = {
   area: 100,
   materialLabel: "Рациональный",
   workEstimate: 4_000_000,
-  materialsEstimate: 2_200_000,
-  totalEstimate: 6_200_000,
   source: "calculator" as const,
   personalDataConsent: true as const,
   telegramConsent: true as const,
@@ -18,6 +16,11 @@ const validLead = {
 };
 
 describe("lead consent validation", () => {
+  it("accepts the cost of work only, and an older page that still sends materials and total", () => {
+    expect(leadInput.safeParse(validLead).success).toBe(true);
+    expect(leadInput.safeParse({ ...validLead, materialsEstimate: 2_200_000, totalEstimate: 6_200_000 }).success).toBe(true);
+  });
+
   it("accepts a complete versioned consent", () => {
     expect(leadInput.safeParse(validLead).success).toBe(true);
   });

@@ -14,8 +14,6 @@ const sampleLead: LeadNotification = {
   area: 100,
   materialLabel: "Рациональный",
   workEstimate: 4_000_000,
-  materialsEstimate: 2_200_000,
-  totalEstimate: 6_200_000,
   source: "calculator",
   personalDataConsent: true,
   telegramConsent: true,

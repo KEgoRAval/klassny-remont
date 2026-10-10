@@ -29,6 +29,8 @@ describe("residential complex estimate form", () => {
 
   it("keeps the price estimate transparent without showing materials ratio", () => {
     expect(source).toContain("area * 40_000");
+    expect(source).not.toContain("materialsEstimate");
+    expect(source).not.toContain("totalEstimate");
     expect(source).toContain("Материалы и индивидуальные решения — отдельной строкой после замера.");
     expect(source).not.toContain("≈ 55% от стоимости работ");
   });

@@ -36,7 +36,7 @@ describe("lead form feedback", () => {
 
   it("uses a 40,000 ₽/m² rational renovation rate without exposing material ratios", () => {
     expect(source).toContain("const workRate = 40_000");
-    expect(source).toContain("const materialsRatio = 0.55");
+    expect(source).not.toContain("materialsRatio");
     expect(source).toContain("Рациональный ремонт — от 40 000 ₽/м²");
     expect(source).toContain("Материалы — отдельной строкой в смете");
     expect(source).not.toContain("≈ 55% от стоимости работ");
@@ -130,8 +130,9 @@ describe("lead form feedback", () => {
   it("shows only the cost of work in the calculator", () => {
     expect(source).toContain("<span>Стоимость работ</span><output");
     expect(source).toContain("от {workEstimate.toLocaleString(\"ru-RU\")} ₽");
-    expect(source).not.toContain("{totalEstimate.toLocaleString");
-    expect(source).not.toContain("{materialsEstimate.toLocaleString");
+    expect(source).toContain('const calculator = { area, materialLabel: "Рациональный", workEstimate };');
+    expect(source).not.toContain("totalEstimate");
+    expect(source).not.toContain("materialsEstimate");
   });
 
   it("uses the 1a wordmark in the header and footer and the 1a icon as favicon", () => {

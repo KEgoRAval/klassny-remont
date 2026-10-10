@@ -6,9 +6,8 @@ export type LeadNotification = {
   service: string;
   area: number;
   materialLabel: string;
+  /** The calculator estimates the cost of work only; materials go into the estimate as a separate line. */
   workEstimate: number;
-  materialsEstimate: number;
-  totalEstimate: number;
   source: "calculator" | "contact";
   personalDataConsent: true;
   telegramConsent: true;
@@ -66,10 +65,8 @@ export function formatLeadMessage(lead: LeadNotification, options: LeadDeliveryO
     "",
     "<b>Параметры расчёта</b>",
     `<b>Площадь:</b> ${lead.area} м²`,
-    `<b>Материалы:</b> ${escapeHtml(lead.materialLabel)}`,
+    `<b>Уровень ремонта:</b> ${escapeHtml(lead.materialLabel)}`,
     `<b>Работы:</b> от ${formatRubles(lead.workEstimate)}`,
-    `<b>Материалы:</b> от ${formatRubles(lead.materialsEstimate)}`,
-    `<b>Ориентир:</b> от ${formatRubles(lead.totalEstimate)}`,
     ...attachmentLines(lead, options),
     "",
     `<b>Согласия:</b> обработка ПД и передача в Telegram — получены (${lead.consentVersion})`,
