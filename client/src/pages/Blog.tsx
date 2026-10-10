@@ -1,62 +1,58 @@
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Clock3, FileText, Phone } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, Clock3, FileText } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { blogPosts, getBlogPost, getRelatedPosts, type BlogPost } from "@/content/blog";
 import { imageSize } from "@/content/media";
 import { reachLeadGoal } from "@/lib/metrika";
 import { trpc } from "@/lib/trpc";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
+import { Dot, FaqIcon, ICON_STROKE, SectionLabel, SiteFooter, SiteHeader } from "@/components/KremChrome";
 import NotFound from "@/pages/NotFound";
 
-function Brand({ dark = false }: { dark?: boolean }) {
+function Breadcrumbs({ items }: { items: Array<{ href?: string; label: string }> }) {
   return (
-    <Link href="/" className={dark ? "blog-brand blog-brand-dark" : "blog-brand"} aria-label="Классный Ремонт — главная">
-      <span className="blog-brand-mark">КР</span>
-      <span><b>Классный</b><em>Ремонт</em></span>
-    </Link>
-  );
-}
-
-function BlogHeader() {
-  return (
-    <header className="blog-header">
-      <div className="blog-header-inner">
-        <Brand dark />
-        <nav className="blog-nav" aria-label="Основная навигация">
-          <Link href="/">Главная</Link>
-          <Link href="/blog" aria-current="page">Блог</Link>
-          <a href="/#projects">Проекты</a>
-          <a href="/#contacts">Контакты</a>
-        </nav>
-        <a className="blog-phone" href="tel:+79779480672"><Phone size={15} />8 (977) 948‑06‑72</a>
-      </div>
-    </header>
-  );
-}
-
-function BlogFooter() {
-  return (
-    <footer className="blog-footer">
-      <div><Brand /><p>Ремонт квартир бизнес- и премиум‑класса в Москве. Смета, график и контроль — до старта работ.</p></div>
-      <div className="blog-footer-links"><Link href="/blog">Все статьи</Link><a href="/#prices">Расчёт стоимости</a><a href="/#contacts">Оставить заявку</a></div>
-      <div className="blog-footer-legal"><b>ИП Бережной Егор Юрьевич</b><span>ОГРНИП 321527500117786 · ИНН 773166101203</span><Link href="/privacy-policy">Политика обработки данных</Link><Link href="/personal-data-consent">Согласие на обработку</Link></div>
-    </footer>
+    <nav className="k-breadcrumbs" aria-label="Хлебные крошки">
+      {items.map((item, index) => (
+        <span key={item.label}>
+          {index > 0 && <span className="k-breadcrumbs-sep" aria-hidden="true">/</span>}
+          {item.href ? <Link href={item.href}>{item.label}</Link> : <span aria-current="page">{item.label}</span>}
+        </span>
+      ))}
+    </nav>
   );
 }
 
 function PostCard({ post, index }: { post: BlogPost; index: number }) {
   return (
-    <article className={`blog-card blog-card-${(index % 3) + 1}`}>
-      <Link href={post.path} className="blog-card-image" aria-label={`Открыть статью: ${post.title}`}>
+    <article className="k-post">
+      <Link href={post.path} className="k-post-photo washed" aria-label={`Открыть статью: ${post.title}`}>
         <img src={post.image} {...imageSize(post.image)} alt={post.imageAlt} loading={index > 1 ? "lazy" : "eager"} decoding="async" />
       </Link>
-      <div className="blog-card-body">
-        <div className="blog-card-meta"><span>{post.category}</span><time dateTime={post.modifiedAt}>{post.displayDate}</time></div>
-        <h2><Link href={post.path}>{post.title}</Link></h2>
+      <div className="k-post-body">
+        <div className="k-post-meta"><span className="tag tag-accent-2">{post.category}</span><time dateTime={post.modifiedAt}>{post.displayDate}</time></div>
+        <h3><Link href={post.path}>{post.title}</Link></h3>
         <p>{post.excerpt}</p>
-        <Link href={post.path} className="blog-card-link">Читать статью <ArrowUpRight size={16} /></Link>
+        <Link href={post.path} className="k-post-link">Читать статью <ArrowUpRight size={16} strokeWidth={ICON_STROKE} /></Link>
       </div>
     </article>
+  );
+}
+
+/** Dark closing panel that sends the reader to the contact form on the home page. */
+function BlogCta({ label, title, accent, text, action }: { label: string; title: string; accent: string; text: string; action: string }) {
+  return (
+    <section className="k-panel k-contacts k-blog-cta">
+      <div className="k-panel-inner k-blog-cta-grid">
+        <div className="k-stack k-stack-lg">
+          <SectionLabel tone="light">{label}</SectionLabel>
+          <h2>{title} <span className="k-accent-light">{accent}</span><Dot /></h2>
+        </div>
+        <div className="k-stack k-stack-lg">
+          <p className="k-contacts-text">{text}</p>
+          <a href="/#contacts" className="btn btn-primary k-btn-lg">{action}<ArrowRight size={18} strokeWidth={ICON_STROKE} /></a>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -68,37 +64,46 @@ export function BlogIndex() {
   ];
 
   return (
-    <div className="blog-page">
-      <BlogHeader />
+    <div className="krem-site k-blog" id="top">
+      <SiteHeader page="blog" />
       <main>
-        <section className="blog-hero">
-          <div className="blog-breadcrumb"><Link href="/">Главная</Link><span>/</span><span>Блог</span></div>
-          <p className="blog-kicker">Журнал Классного Ремонта</p>
-          <h1>Ремонт —<br /><i>по существу.</i></h1>
-          <p className="blog-hero-copy">Разбираем стоимость, сроки, приёмку квартиры и подготовку к ремонту в жилых комплексах Москвы. Без обещаний «за месяц» и без скрытых строк в смете.</p>
+        <section className="k-container k-page-hero">
+          <Breadcrumbs items={[{ href: "/", label: "Главная" }, { label: "Блог" }]} />
+          <SectionLabel>Журнал Классного ремонта</SectionLabel>
+          <h1>Ремонт — <span className="k-accent">по существу</span><Dot /></h1>
+          <p className="k-body-lg">Разбираем стоимость, сроки, приёмку квартиры и подготовку к ремонту в жилых комплексах Москвы. Без обещаний «за месяц» и без скрытых строк в смете.</p>
         </section>
 
-        <section className="blog-featured" aria-label="Главная статья">
-          <Link href={featured.path} className="blog-featured-image"><img src={featured.image} {...imageSize(featured.image)} alt={featured.imageAlt} decoding="async" /></Link>
-          <div className="blog-featured-copy"><p className="blog-kicker">{featured.category}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><div className="blog-byline"><span>Классный Ремонт</span><span>·</span><time dateTime={featured.modifiedAt}>{featured.displayDate}</time><span>·</span><span>{featured.readTime}</span></div><Link href={featured.path} className="blog-button">Разобраться в смете <ArrowRight size={18} /></Link></div>
+        <section className="k-container k-featured-wrap" aria-label="Главная статья">
+          <div className="k-featured">
+            <Link href={featured.path} className="k-featured-photo washed"><img src={featured.image} {...imageSize(featured.image)} alt={featured.imageAlt} decoding="async" /></Link>
+            <div className="k-featured-copy">
+              <span className="tag tag-accent">{featured.category}</span>
+              <h2><Link href={featured.path}>{featured.title}</Link></h2>
+              <p>{featured.excerpt}</p>
+              <div className="k-byline"><span>Классный Ремонт</span><span aria-hidden="true">·</span><time dateTime={featured.modifiedAt}>{featured.displayDate}</time><span aria-hidden="true">·</span><span>{featured.readTime}</span></div>
+              <Link href={featured.path} className="btn btn-primary k-btn-lg">Разобраться в смете <ArrowRight size={18} strokeWidth={ICON_STROKE} /></Link>
+            </div>
+          </div>
         </section>
 
         {groups.map(group => (
-          <section className="blog-section" key={group.title}>
-            <div className="blog-section-heading"><p className="blog-kicker">Полезное до старта работ</p><h2>{group.title}</h2></div>
-            <div className="blog-grid">{group.posts.map((post, index) => <PostCard key={post.slug} post={post} index={index} />)}</div>
+          <section className="k-section k-container" key={group.title}>
+            <SectionLabel>Полезное до старта работ</SectionLabel>
+            <h2>{group.title}<Dot /></h2>
+            <div className="k-post-grid">{group.posts.map((post, index) => <PostCard key={post.slug} post={post} index={index} />)}</div>
           </section>
         ))}
 
-        <section className="blog-cta"><p className="blog-kicker">Следующий шаг</p><h2>Покажите квартиру.<br /><i>Смету разберём вместе.</i></h2><p>После разговора и замера подготовим предварительный расчёт, расскажем о точках контроля и покажем, какие решения влияют на срок.</p><a href="/#contacts" className="blog-button">Получить расчёт за 2 часа <ArrowRight size={18} /></a></section>
+        <BlogCta label="Следующий шаг" title="Покажите квартиру." accent="Смету разберём вместе" text="После разговора и замера подготовим предварительный расчёт, расскажем о точках контроля и покажем, какие решения влияют на срок." action="Получить расчёт за 2 часа" />
       </main>
-      <BlogFooter />
+      <SiteFooter page="blog" />
     </div>
   );
 }
 
 function ArticleTable({ table }: { table: NonNullable<BlogPost["sections"][number]["table"]> }) {
-  return <div className="article-table-scroll"><table className="article-table"><thead><tr>{table.headers.map(header => <th key={header}>{header}</th>)}</tr></thead><tbody>{table.rows.map((row, index) => <tr key={`${row[0]}-${index}`}>{row.map(cell => <td key={cell}>{cell}</td>)}</tr>)}</tbody></table></div>;
+  return <div className="k-table-scroll"><table className="k-table"><thead><tr>{table.headers.map(header => <th key={header}>{header}</th>)}</tr></thead><tbody>{table.rows.map((row, index) => <tr key={`${row[0]}-${index}`}>{row.map(cell => <td key={cell}>{cell}</td>)}</tr>)}</tbody></table></div>;
 }
 
 const formatRubles = (value: number) => `${value.toLocaleString("ru-RU")} ₽`;
@@ -113,6 +118,7 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
   const [showConsentValidation, setShowConsentValidation] = useState(false);
   // The cost of work only; materials go into the estimate as a separate line after the visit.
   const workEstimate = area * 40_000;
+  const formId = `complex-estimate-${complexName.replaceAll(" ", "-").replaceAll("«", "").replaceAll("»", "")}`;
   const submitLead = trpc.leads.submit.useMutation({
     onSuccess: () => {
       reachLeadGoal("lead_blog");
@@ -124,22 +130,41 @@ function ComplexEstimateForm({ complexName }: { complexName: string }) {
     },
   });
 
-  if (submitted) {
-    return <section className="complex-estimate complex-estimate-success" aria-live="polite"><span className="complex-success-mark"><Check size={22} /></span><div><p className="blog-kicker">Заявка отправлена</p><h2>Спасибо, {name}.</h2><p>Параметры для {complexName} уже переданы команде. Свяжемся в течение 2 часов, уточним задачу и договоримся о замере.</p><button type="button" onClick={() => { setSubmitted(false); setName(""); setArea(90); }}>Рассчитать другую квартиру <ArrowRight size={16} /></button></div></section>;
-  }
-
   return (
-    <section className="complex-estimate" aria-labelledby="complex-estimate-title" data-complex={complexName}>
-      <div className="complex-estimate-intro"><p className="blog-kicker">Расчёт по вашему объекту</p><h2 id="complex-estimate-title">Рассчитать стоимость<br /><i>ремонта в моём ЖК.</i></h2><p>Название комплекса уже подставлено: <b>{complexName}</b>. Оставьте контакты — подготовим предварительный расчёт за 2 часа.</p></div>
-      <form className="complex-estimate-form" onSubmit={(event) => { event.preventDefault(); if (!personalDataConsent || !telegramConsent) { setShowConsentValidation(true); return; } submitLead.mutate({ name, phone, service: `Расчёт ремонта в ${complexName}`, area, materialLabel: "Рациональный", workEstimate, source: "calculator", personalDataConsent, telegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION }); }}>
-        <div className="complex-name"><span>Ваш жилой комплекс</span><b>{complexName}</b></div>
-        <label className="complex-range-label">Площадь квартиры <output>{area} м²</output><input type="range" min="50" max="250" step="5" value={area} onChange={(event) => setArea(Number(event.target.value))} style={{ "--value": `${((area - 50) / 200) * 100}%` } as React.CSSProperties} disabled={submitLead.isPending} /><small>50 м² <span>250 м²</span></small></label>
-        <div className="complex-estimate-price"><span>Ориентир по работам</span><b>от {formatRubles(workEstimate)}</b><small>Материалы и индивидуальные решения — отдельной строкой после замера.</small></div>
-        <div className="complex-fields"><label>Ваше имя<input className="ym-record-keys" value={name} onChange={(event) => setName(event.target.value)} disabled={submitLead.isPending} required minLength={2} placeholder="Как к вам обращаться" /></label><label>Телефон<input className="ym-record-keys" value={phone} onChange={(event) => setPhone(event.target.value)} disabled={submitLead.isPending} required minLength={6} placeholder="+7 (___) ___‑__‑__" /></label></div>
-        <PersonalDataConsent formId={`complex-estimate-${complexName.replaceAll(" ", "-").replaceAll("«", "").replaceAll("»", "")}`} personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} showValidation={showConsentValidation} onConsentInvalid={() => setShowConsentValidation(true)} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
-        <button className={submitLead.isPending ? "blog-button complex-submit form-submit-loading" : "blog-button complex-submit"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <><span className="button-loader" aria-hidden="true"><i></i><i></i><i></i></span>Отправляем заявку</> : <>Получить расчёт за 2 часа <ArrowRight size={17} /></>}</button>
-        {submitLead.isError && <p className="complex-form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
-      </form>
+    <section className="k-panel k-contacts k-estimate" aria-labelledby="complex-estimate-title" data-complex={complexName}>
+      <div className="k-estimate-grid">
+        <div className="k-stack k-stack-lg">
+          <SectionLabel tone="light">Расчёт по вашему объекту</SectionLabel>
+          <h2 id="complex-estimate-title">Рассчитать стоимость <span className="k-accent-light">ремонта в моём ЖК</span><Dot /></h2>
+          <p className="k-contacts-text">Название комплекса уже подставлено: <b>{complexName}</b>. Оставьте контакты — подготовим предварительный расчёт за 2 часа.</p>
+        </div>
+        <div className="k-form-card">
+          {submitted ? (
+            <div className="k-estimate-success" aria-live="polite">
+              <span className="k-thankyou-check" aria-hidden="true"><Check size={30} strokeWidth={ICON_STROKE} /></span>
+              <SectionLabel>Заявка отправлена</SectionLabel>
+              <h3>Спасибо, {name}.</h3>
+              <p>Параметры для {complexName} уже переданы команде. Свяжемся в течение 2 часов, уточним задачу и договоримся о замере.</p>
+              <button type="button" className="btn btn-secondary k-btn-md" onClick={() => { setSubmitted(false); setName(""); setArea(90); }}>Рассчитать другую квартиру <ArrowRight size={16} strokeWidth={ICON_STROKE} /></button>
+            </div>
+          ) : (
+            <form className="k-form" onSubmit={(event) => { event.preventDefault(); if (!personalDataConsent || !telegramConsent) { setShowConsentValidation(true); return; } submitLead.mutate({ name, phone, service: `Расчёт ремонта в ${complexName}`, area, materialLabel: "Рациональный", workEstimate, source: "calculator", personalDataConsent, telegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION }); }}>
+              <div className="k-estimate-complex"><span>Ваш жилой комплекс</span><b>{complexName}</b></div>
+              <div className="k-calc-range">
+                <div className="k-calc-row"><label htmlFor={`${formId}-area`}>Площадь квартиры</label><output htmlFor={`${formId}-area`}>{area} м²</output></div>
+                <input id={`${formId}-area`} type="range" min="50" max="250" step="5" value={area} onChange={(event) => setArea(Number(event.target.value))} disabled={submitLead.isPending} />
+                <div className="k-calc-limits"><span>50 м²</span><span>250 м²</span></div>
+              </div>
+              <div className="k-calc-note"><div><span>Ориентир по работам</span><b>от {formatRubles(workEstimate)}</b></div><small>Материалы и индивидуальные решения — отдельной строкой после замера.</small></div>
+              <div className="field"><label htmlFor={`${formId}-name`}>Ваше имя</label><input className="ym-record-keys" value={name} id={`${formId}-name`} onChange={(event) => setName(event.target.value)} disabled={submitLead.isPending} required minLength={2} placeholder="Как к вам обращаться" /></div>
+              <div className="field"><label htmlFor={`${formId}-phone`}>Телефон</label><input className="ym-record-keys" value={phone} id={`${formId}-phone`} type="tel" onChange={(event) => setPhone(event.target.value)} disabled={submitLead.isPending} required minLength={6} placeholder="+7 (___) ___‑__‑__" /></div>
+              <PersonalDataConsent formId={formId} personalDataConsent={personalDataConsent} telegramConsent={telegramConsent} disabled={submitLead.isPending} showValidation={showConsentValidation} onConsentInvalid={() => setShowConsentValidation(true)} onPersonalDataConsentChange={setPersonalDataConsent} onTelegramConsentChange={setTelegramConsent} />
+              <button className={submitLead.isPending ? "btn btn-primary k-btn-lg k-btn-block form-submit-loading" : "btn btn-primary k-btn-lg k-btn-block"} type="submit" disabled={submitLead.isPending}>{submitLead.isPending ? <><span className="button-loader" aria-hidden="true"><i></i><i></i><i></i></span>Отправляем заявку</> : <>Получить расчёт за 2 часа <ArrowRight size={17} strokeWidth={ICON_STROKE} /></>}</button>
+              {submitLead.isError && <p className="form-error">Не удалось отправить заявку. Позвоните нам или повторите попытку.</p>}
+            </form>
+          )}
+        </div>
+      </div>
     </section>
   );
 }
@@ -152,39 +177,42 @@ export function BlogArticle() {
   const related = getRelatedPosts(post.slug);
   const complexName = post.residentialComplex ?? post.shortTitle.replace(/^Ремонт в /, "");
   return (
-    <div className="blog-page article-page">
-      <BlogHeader />
+    <div className="krem-site k-blog k-article-page" id="top">
+      <SiteHeader page="blog" />
       <main>
         <article>
-          <header className="article-hero">
-            <div className="article-shell">
-              <div className="blog-breadcrumb"><Link href="/">Главная</Link><span>/</span><Link href="/blog">Блог</Link><span>/</span><span>{post.shortTitle}</span></div>
-              <div className="article-meta"><span>{post.category}</span><span>·</span><time dateTime={post.modifiedAt}>Обновлено {post.displayDate}</time><span>·</span><span><Clock3 size={13} />{post.readTime}</span></div>
+          <header className="k-container k-article-hero">
+            <div className="k-article-head">
+              <Breadcrumbs items={[{ href: "/", label: "Главная" }, { href: "/blog", label: "Блог" }, { label: post.shortTitle }]} />
+              <div className="k-article-meta"><span className="tag tag-accent-2">{post.category}</span><time dateTime={post.modifiedAt}>Обновлено {post.displayDate}</time><span><Clock3 size={14} strokeWidth={ICON_STROKE} />{post.readTime}</span></div>
               <h1>{post.title}</h1>
-              <p className="article-lead">{post.description}</p>
-              <div className="article-author"><span className="article-author-mark">КР</span><span><b>Редакция «Классного Ремонта»</b><small>Практика ремонта квартир в Москве</small></span></div>
+              <p className="k-body-lg">{post.description}</p>
+              <div className="k-article-author"><span className="k-article-author-mark" aria-hidden="true">K</span><span><b>Редакция «Классного ремонта»</b><small>Практика ремонта квартир в Москве</small></span></div>
             </div>
-            <div className="article-cover"><img src={post.image} {...imageSize(post.image)} alt={post.imageAlt} fetchPriority="high" decoding="async" /></div>
+            <div className="k-article-cover washed"><img src={post.image} {...imageSize(post.image)} alt={post.imageAlt} fetchPriority="high" decoding="async" /></div>
           </header>
 
-          <div className="article-shell article-content-wrap">
-            <aside className="article-aside"><p>В статье</p><ol>{post.sections.map((section, index) => <li key={section.heading}><a href={`#section-${index + 1}`}>{section.heading}</a></li>)}</ol><a href="/#contacts" className="article-aside-cta">Обсудить проект <ArrowRight size={15} /></a></aside>
-            <div className="article-content">
-              <div className="article-answer"><p className="article-answer-label">Короткий ответ</p><p>{post.directAnswer}</p></div>
-              {post.sections.map((section, index) => <section className="article-section" id={`section-${index + 1}`} key={section.heading}><h2>{section.heading}</h2>{section.paragraphs?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}{section.bullets && <ul>{section.bullets.map(bullet => <li key={bullet}>{bullet}</li>)}</ul>}{section.table && <ArticleTable table={section.table} />}</section>)}
+          <div className="k-container k-article-layout">
+            <aside className="k-article-toc"><p>В статье</p><ol>{post.sections.map((section, index) => <li key={section.heading}><a href={`#section-${index + 1}`}>{section.heading}</a></li>)}</ol><a href="/#contacts" className="btn btn-primary k-btn-sm">Обсудить проект <ArrowRight size={15} strokeWidth={ICON_STROKE} /></a></aside>
+            <div className="k-article-content">
+              <div className="k-article-answer"><SectionLabel tone="sage">Короткий ответ</SectionLabel><p>{post.directAnswer}</p></div>
+              {post.sections.map((section, index) => <section className="k-article-section" id={`section-${index + 1}`} key={section.heading}><h2>{section.heading}</h2>{section.paragraphs?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}{section.bullets && <ul>{section.bullets.map(bullet => <li key={bullet}>{bullet}</li>)}</ul>}{section.table && <ArticleTable table={section.table} />}</section>)}
 
-              <section className="article-faq" aria-labelledby="article-faq-title"><p className="blog-kicker">Частые вопросы</p><h2 id="article-faq-title">Что ещё важно уточнить</h2>{post.faqs.map((faq, index) => <details open={index === 0} key={faq.question}><summary>{faq.question}<ArrowRight size={18} /></summary><p>{faq.answer}</p></details>)}</section>
-              <section className="article-sources"><FileText size={20} /><div><h2>Источники и документы</h2><p>Ссылки приведены для самостоятельной проверки. Условия конкретного объекта всегда уточняются по актуальным документам.</p><ul>{post.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}<ArrowUpRight size={14} /></a></li>)}</ul></div></section>
-              {post.disclaimer && <p className="article-disclaimer">{post.disclaimer}</p>}
-              {post.category === "ЖК Москвы" && <ComplexEstimateForm complexName={complexName} />}
+              <section className="k-article-faq" aria-labelledby="article-faq-title"><SectionLabel>Частые вопросы</SectionLabel><h2 id="article-faq-title">Что ещё важно уточнить<Dot /></h2><div className="k-faq-list">{post.faqs.map((faq, index) => <details name="article-faq" open={index === 0} key={faq.question}><summary>{faq.question}<FaqIcon /></summary><p>{faq.answer}</p></details>)}</div></section>
+              <section className="k-article-sources"><span className="k-article-sources-icon" aria-hidden="true"><FileText size={20} strokeWidth={ICON_STROKE} /></span><div><h2>Источники и документы</h2><p>Ссылки приведены для самостоятельной проверки. Условия конкретного объекта всегда уточняются по актуальным документам.</p><ul>{post.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}<ArrowUpRight size={14} strokeWidth={ICON_STROKE} /></a></li>)}</ul></div></section>
+              {post.disclaimer && <p className="k-article-disclaimer">{post.disclaimer}</p>}
             </div>
           </div>
+          {post.category === "ЖК Москвы" && <ComplexEstimateForm complexName={complexName} />}
         </article>
 
-        <section className="related-posts"><div className="related-heading"><p className="blog-kicker">Продолжить чтение</p><h2>Полезно до<br /><i>старта работ.</i></h2><Link href="/blog">Все статьи <ArrowRight size={16} /></Link></div><div className="related-grid">{related.map((item, index) => <PostCard key={item.slug} post={item} index={index} />)}</div></section>
-        <section className="article-cta"><div><p className="blog-kicker">Нужен план для вашей квартиры?</p><h2>От расчёта —<br /><i>к понятному проекту.</i></h2></div><div><p>Разберём исходные данные, назначим замер и подготовим предварительный расчёт в течение 2 часов.</p><a href="/#contacts" className="blog-button">Оставить заявку на замер <ArrowRight size={18} /></a></div></section>
+        <section className="k-section k-container">
+          <div className="k-heading-row"><div><SectionLabel>Продолжить чтение</SectionLabel><h2>Полезно до <span className="k-accent">старта работ</span><Dot /></h2></div><Link href="/blog" className="btn btn-secondary k-btn-md">Все статьи <ArrowRight size={16} strokeWidth={ICON_STROKE} /></Link></div>
+          <div className="k-post-grid k-post-grid-related">{related.map((item, index) => <PostCard key={item.slug} post={item} index={index} />)}</div>
+        </section>
+        <BlogCta label="Нужен план для вашей квартиры?" title="От расчёта —" accent="к понятному проекту" text="Разберём исходные данные, назначим замер и подготовим предварительный расчёт в течение 2 часов." action="Оставить заявку на замер" />
       </main>
-      <BlogFooter />
+      <SiteFooter page="blog" />
     </div>
   );
 }

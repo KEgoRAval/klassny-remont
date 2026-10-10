@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Check,
-  Menu,
   MessageCircle,
-  Minus,
   Paperclip,
   Phone,
-  Plus,
   Send,
   Star,
   X,
@@ -17,6 +14,7 @@ import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components
 import { TELEGRAM_URL, WHATSAPP_URL } from "@/components/MessengerQuickActions";
 import { imageSize, siteImages } from "@/content/media";
 import { reachLeadGoal } from "@/lib/metrika";
+import { Dot, FaqIcon, ICON_STROKE, SectionLabel, SiteFooter, SiteHeader } from "@/components/KremChrome";
 import { DESIGN_FILE_ACCEPT, DESIGN_FILE_SERVER_MESSAGES, designFileProblem, formatFileSize, readFileAsBase64 } from "@/lib/designFile";
 
 const images = {
@@ -46,41 +44,11 @@ const steps = [
   ["05", "Приёмка и гарантия", "Сдаём объект по чек‑листу и остаёмся на связи после переезда."],
 ];
 
-const navLinks = [
-  ["#projects", "Проекты"],
-  ["#process", "Процесс"],
-  ["#prices", "Цены"],
-  ["/blog", "Блог"],
-  ["#about", "О компании"],
-  ["#contacts", "Контакты"],
-];
-
 /**
  * The design-project attachment is delivered to Telegram with the lead. The consent edition 2026-10-10
  * names attached files; the server refuses a file sent under an earlier edition.
  */
 const DESIGN_FILE_UPLOAD_ENABLED = true;
-
-const ICON_STROKE = 2.75;
-
-function SectionLabel({ children, tone = "default" }: { children: React.ReactNode; tone?: "default" | "sage" | "light" }) {
-  return <div className={`k-label k-label-${tone}`}><span></span>{children}</div>;
-}
-
-/** The green full stop from the 1a logo, closing headings. */
-function Dot({ tone = "sage" }: { tone?: "sage" | "accent" }) {
-  return <span className={`k-dot k-dot-${tone}`} aria-hidden="true"></span>;
-}
-
-/** Wordmark 1a — «Krem • moscow» with the «Классный ремонт» caption, see design_handoff_krem_site/logo/krem-logo.svg. */
-function KremLogo({ size = "header" }: { size?: "header" | "footer" }) {
-  return (
-    <span className={`k-logo k-logo-${size}`}>
-      <span className="k-logo-mark"><span className="k-logo-krem">Krem</span><span className="k-logo-dot"></span><span className="k-logo-city">moscow</span></span>
-      <span className="k-logo-caption">Классный ремонт</span>
-    </span>
-  );
-}
 
 type CalculatorDetails = {
   area: number;
@@ -160,7 +128,6 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
 }
 
 export default function Home() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [leadOpen, setLeadOpen] = useState(false);
   const [area, setArea] = useState(100);
   const [thankYouName, setThankYouName] = useState<string | null>(null);
@@ -227,36 +194,16 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") { setLeadOpen(false); setMenuOpen(false); } };
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setLeadOpen(false); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const openLead = () => { setMenuOpen(false); setLeadOpen(true); };
-  const closeMenu = () => setMenuOpen(false);
+  const openLead = () => setLeadOpen(true);
 
   return (
-    <div className="krem-home">
-      <header className="k-header">
-        <div className="k-header-bar">
-          <a className="k-header-brand" href="#top" aria-label="Классный ремонт — главная"><KremLogo /></a>
-          <nav className="k-nav" aria-label="Главное меню">
-            {navLinks.map(([href, label]) => <a key={href} href={href}>{label}</a>)}
-          </nav>
-          <a className="k-header-phone" href="tel:+79779480672"><Phone size={16} strokeWidth={ICON_STROKE} />8 (977) 948‑06‑72</a>
-          <a className="btn btn-primary k-header-cta" href="#contacts">Получить смету</a>
-          <button className="btn btn-secondary btn-icon k-menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"} aria-expanded={menuOpen} aria-controls="mobile-menu">{menuOpen ? <X size={22} strokeWidth={ICON_STROKE} /> : <Menu size={22} strokeWidth={ICON_STROKE} />}</button>
-        </div>
-        {menuOpen && (
-          <nav className="k-mobile-menu" id="mobile-menu" aria-label="Мобильное меню">
-            {navLinks.map(([href, label]) => <a key={href} href={href} onClick={closeMenu}>{label}</a>)}
-            <div className="k-mobile-menu-actions">
-              <a className="btn btn-primary k-btn-md" href="#contacts" onClick={closeMenu}>Получить смету по проекту</a>
-              <a className="btn btn-secondary k-btn-md" href="tel:+79779480672">8 (977) 948‑06‑72</a>
-            </div>
-          </nav>
-        )}
-      </header>
+    <div className="krem-site">
+      <SiteHeader page="home" />
 
       <main>
         <section id="top" className="k-hero k-container">
@@ -420,21 +367,10 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="k-footer k-container">
-        <div className="k-footer-top">
-          <a href="#top" aria-label="Классный ремонт — наверх"><KremLogo size="footer" /></a>
-          <nav className="k-footer-links" aria-label="Навигация в подвале"><a href="#projects">Портфолио</a><a href="#process">Процесс</a><a href="#prices">Цены</a><a href="/blog">Блог</a><a href="#contacts">Контакты</a></nav>
-        </div>
-        <div className="k-legal" aria-label="Реквизиты индивидуального предпринимателя"><span>ИП Бережной Егор Юрьевич</span><span><small>ОГРНИП</small><b>321527500117786</b></span><span><small>ИНН</small><b>773166101203</b></span><span><small>ОКПО</small><b>2011448980</b></span></div>
-        <div className="k-footer-bottom"><span>© 2026 ИП Бережной Егор Юрьевич</span><a href="/privacy-policy">Политика обработки персональных данных</a><a href="/personal-data-consent">Согласие на обработку данных</a><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div>
-      </footer>
+      <SiteFooter page="home" />
 
       <LeadModal open={leadOpen} onClose={() => setLeadOpen(false)} onSuccess={showThankYou} calculator={calculator} />
       <ThankYouModal name={thankYouName} onClose={() => setThankYouName(null)} />
     </div>
   );
-}
-
-function FaqIcon() {
-  return <span className="k-faq-icon" aria-hidden="true"><Plus className="k-faq-plus" size={18} strokeWidth={ICON_STROKE} /><Minus className="k-faq-minus" size={18} strokeWidth={ICON_STROKE} /></span>;
 }

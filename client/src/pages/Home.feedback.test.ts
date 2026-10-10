@@ -7,6 +7,8 @@ const mediaSource = readFileSync(resolve(process.cwd(), "client/src/content/medi
 const seo = readFileSync(resolve(process.cwd(), "client/src/ssr/prefetch.ts"), "utf8");
 const llms = readFileSync(resolve(process.cwd(), "client/public/llms.txt"), "utf8");
 const pricing = readFileSync(resolve(process.cwd(), "client/public/pricing.md"), "utf8");
+const chrome = readFileSync(resolve(process.cwd(), "client/src/components/KremChrome.tsx"), "utf8");
+const page = (file: string) => readFileSync(resolve(process.cwd(), file), "utf8");
 
 describe("lead form feedback", () => {
   it("shows sending content in both lead submission paths", () => {
@@ -56,15 +58,16 @@ describe("lead form feedback", () => {
     expect(seo).toContain('telephone: "+7 977 948-06-72"');
   });
 
-  it("displays the supplied sole proprietor registration details", () => {
-    expect(source).toContain("ИП Бережной Егор Юрьевич");
+  it("displays the supplied sole proprietor registration details in the shared footer", () => {
+    expect(source).toContain('<SiteFooter page="home" />');
+    expect(chrome).toContain("ИП Бережной Егор Юрьевич");
     expect(seo).toContain('legalName: "ИП Бережной Егор Юрьевич"');
-    expect(source).toContain("ОГРНИП");
-    expect(source).toContain("321527500117786");
-    expect(source).toContain("ИНН");
-    expect(source).toContain("773166101203");
-    expect(source).toContain("ОКПО");
-    expect(source).toContain("2011448980");
+    expect(chrome).toContain("ОГРНИП");
+    expect(chrome).toContain("321527500117786");
+    expect(chrome).toContain("ИНН");
+    expect(chrome).toContain("773166101203");
+    expect(chrome).toContain("ОКПО");
+    expect(chrome).toContain("2011448980");
   });
 
   it("presents four individual projects without status or visualization labels", () => {
@@ -137,8 +140,9 @@ describe("lead form feedback", () => {
 
   it("uses the 1a wordmark in the header and footer and the 1a icon as favicon", () => {
     const html = readFileSync(resolve(process.cwd(), "client/index.html"), "utf8");
-    expect(source).toContain('<KremLogo />');
-    expect(source).toContain('<KremLogo size="footer" />');
+    expect(source).toContain('<SiteHeader page="home" />');
+    expect(chrome).toContain("<KremLogo />");
+    expect(chrome).toContain('<KremLogo size="footer" />');
     expect(source).not.toContain("brand-mark");
     expect(html).toContain('<link rel="icon" href="/krem-icon.svg"');
   });
@@ -165,5 +169,16 @@ describe("lead form feedback", () => {
     expect(llms).toContain("от 40 000 ₽/м²");
     expect(pricing).toContain("Стоимость работ начинается **от 40 000 ₽ за м²**");
     expect(pricing).toContain("Ориентировочный срок ремонта начинается от **4 месяцев**");
+  });
+
+  it("gives the blog, legal pages and 404 the same 1a header and footer, without the old КР mark", () => {
+    for (const [file, kind] of [["client/src/pages/Blog.tsx", "blog"], ["client/src/pages/Legal.tsx", "legal"], ["client/src/pages/NotFound.tsx", "legal"]] as const) {
+      const text = page(file);
+      expect(text, file).toContain(`<SiteHeader page="${kind}" />`);
+      expect(text, file).toContain(`<SiteFooter page="${kind}" />`);
+      expect(text, file).toContain('className="krem-site');
+      expect(text, file).not.toMatch(/>КР</);
+    }
+    expect(page("client/src/pages/NotFound.tsx")).not.toContain("Page Not Found");
   });
 });
