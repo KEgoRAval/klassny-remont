@@ -23,7 +23,7 @@ describe("lead form feedback", () => {
     expect(source).toContain("<ThankYouModal name={thankYouName}");
   });
 
-  it("requires separate consent for processing and Telegram delivery in every homepage form", () => {
+  it("requires consent to processing and Telegram delivery in every homepage form", () => {
     expect(source).toContain("<PersonalDataConsent formId=\"lead-modal\"");
     expect(source).toContain("<PersonalDataConsent formId=\"contact-form\"");
     expect(source).toContain("setShowConsentValidation(true)");

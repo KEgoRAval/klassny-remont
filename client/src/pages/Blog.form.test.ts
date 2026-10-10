@@ -18,7 +18,7 @@ describe("residential complex estimate form", () => {
     expect(source).toContain("setSubmitted(true)");
   });
 
-  it("requires separate processing and Telegram consent before submission", () => {
+  it("requires consent to processing and Telegram delivery before submission", () => {
     expect(source).toContain("PersonalDataConsent");
     expect(source).toContain("if (!personalDataConsent || !telegramConsent) { setShowConsentValidation(true); return; }");
     expect(source).toContain("personalDataConsent, telegramConsent");
