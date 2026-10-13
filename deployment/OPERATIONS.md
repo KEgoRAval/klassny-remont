@@ -29,6 +29,28 @@ Nginx пропускает тела запросов до 5 МБ, а для `/ap
 
 ## Выкладка
 
+### С самого сервера (основной способ)
+
+Скрипт `deployment/release-from-github.sh` собирает релиз прямо на сервере из GitHub (репозиторий публичный, токен не нужен) и включает его. Отдельная машина для выкладки не нужна — достаточно SSH‑доступа пользователя `kegora`:
+
+```bash
+ssh -t kegora@89.117.149.68
+curl -fsSL https://raw.githubusercontent.com/KEgoRAval/klassny-remont/main/deployment/release-from-github.sh -o /tmp/release.sh
+bash /tmp/release.sh
+```
+
+Скрипт берёт текущий коммит `main` (или ветку/тег первым аргументом), скачивает именно его, ставит зависимости, собирает, переключает `current` через `activate-release.sh`, ставит HTTPS‑конфиг Nginx из репозитория (при ошибке `nginx -t` возвращает прежний), проверяет, что сайт отвечает на `127.0.0.1:3020` и на https://krem.moscow/, и оставляет 5 последних релизов. Коммит релиза записан в `releases/<id>/RELEASE_COMMIT`. `sudo` спросит пароль `kegora`.
+
+Откат на предыдущий релиз:
+
+```bash
+ls -1 /home/kegora/apps/klassny-remont/releases
+sudo ln -sfn /home/kegora/apps/klassny-remont/releases/<предыдущий id> /home/kegora/apps/klassny-remont/current
+sudo systemctl restart klassny-remont
+```
+
+### Из песочницы Manus
+
 Выкладывать скриптом `scripts/deploy-and-keep-https.sh`, а не `scripts/deploy-to-server.sh` напрямую. `deploy-to-server.sh` запускает `deployment/prepare-server.sh`, а тот ставит конфиг Nginx только для HTTP (`klassny-remont.nginx.conf`) — после включения HTTPS это выключало бы его при каждой выкладке. Новый скрипт делает обычную выкладку, затем, если на сервере есть сертификат для krem.moscow, ставит `klassny-remont.https.nginx.conf`, проверяет его `nginx -t` (при ошибке возвращает прежний конфиг), перезагружает Nginx и проверяет, что https://krem.moscow/ отвечает, а http:// перенаправляет на него. Без сертификата HTTP‑конфиг остаётся как есть.
 
 ## Яндекс Метрика

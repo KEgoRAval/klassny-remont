@@ -3,33 +3,23 @@ import { blogPosts } from "../../client/src/content/blog";
 
 const siteOrigin = () => (process.env.CANONICAL_ORIGIN ?? "").replace(/\/+$/, "");
 
+/**
+ * Date the home page content last changed. Update it with a release that changes the home page:
+ * a lastmod that moves on every request teaches search engines to ignore lastmod for the whole site.
+ */
+export const HOME_UPDATED_AT = "2026-10-12";
+
+/** The blog index changes when a post is added or updated. */
+export const blogUpdatedAt = () => blogPosts.map(post => post.modifiedAt).sort().at(-1) ?? HOME_UPDATED_AT;
+
+/** Crawlers named here read only their own group, so each group repeats the closed paths. */
+const CRAWLERS = ["*", "YandexBot", "GPTBot", "ChatGPT-User", "PerplexityBot", "ClaudeBot", "anthropic-ai", "Google-Extended", "bingbot"];
+
 export function registerSeoRoutes(app: Express) {
   app.get("/robots.txt", (_req, res) => {
     const origin = siteOrigin();
-    const lines = [
-      "# Классный Ремонт: правила обхода сайта",
-      "User-agent: *",
-      "Allow: /",
-      "Disallow: /api/",
-      "",
-      "# AI-поисковые боты разрешены для цитирования публичных материалов.",
-      "User-agent: GPTBot",
-      "Allow: /",
-      "User-agent: ChatGPT-User",
-      "Allow: /",
-      "User-agent: PerplexityBot",
-      "Allow: /",
-      "User-agent: ClaudeBot",
-      "Allow: /",
-      "User-agent: anthropic-ai",
-      "Allow: /",
-      "User-agent: Google-Extended",
-      "Allow: /",
-      "User-agent: bingbot",
-      "Allow: /",
-      "User-agent: YandexBot",
-      "Allow: /",
-    ];
+    const lines = ["# Классный Ремонт: правила обхода сайта", "# AI-поисковые боты разрешены для цитирования публичных материалов."];
+    for (const agent of CRAWLERS) lines.push("", `User-agent: ${agent}`, "Allow: /", "Disallow: /api/");
     if (origin) lines.push("", `Sitemap: ${origin}/sitemap.xml`);
     res.type("text/plain").set("Cache-Control", "public, max-age=3600").send(`${lines.join("\n")}\n`);
   });
@@ -40,10 +30,9 @@ export function registerSeoRoutes(app: Express) {
       res.status(503).type("text/plain").send("Sitemap requires CANONICAL_ORIGIN configuration.");
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
     const urls = [
-      { path: "/", lastmod: today, priority: "1.0" },
-      { path: "/blog", lastmod: today, priority: "0.9" },
+      { path: "/", lastmod: HOME_UPDATED_AT, priority: "1.0" },
+      { path: "/blog", lastmod: blogUpdatedAt(), priority: "0.9" },
       ...blogPosts.map(post => ({ path: post.path, lastmod: post.modifiedAt, priority: "0.8" })),
     ];
     const nodes = urls.map(item => `  <url><loc>${origin}${item.path}</loc><lastmod>${item.lastmod}</lastmod><changefreq>monthly</changefreq><priority>${item.priority}</priority></url>`).join("\n");
