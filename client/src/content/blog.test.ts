@@ -4,12 +4,14 @@ import { prefetchForPath } from "../ssr/prefetch";
 
 describe("SEO blog content", () => {
   it("publishes a focused cluster of practical and geo articles", () => {
-    expect(blogPosts).toHaveLength(14);
+    expect(blogPosts).toHaveLength(16);
     expect(blogPosts.map(post => post.slug)).toEqual(expect.arrayContaining([
       "stoimost-remonta-kvartiry-v-moskve-2026",
       "sroki-remonta-kvartiry-po-etapam",
       "priemka-kvartiry-v-novostroyke-chek-list",
       "remont-kvartiry-v-novostroyke-s-chego-nachat",
+      "remont-kvartiry-premium-klassa",
+      "predchistovaya-otdelka-white-box",
       "remont-v-zhk-very-na-botanicheskoy",
       "remont-v-zhk-ever-v-moskve",
       "remont-v-zhk-ostrov-v-moskve",
