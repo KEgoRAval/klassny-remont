@@ -74,3 +74,14 @@ bash /tmp/setup-ci.sh
 ```
 
 Скрипт печатает значения секретов `DEPLOY_SSH_KEY` и `DEPLOY_KNOWN_HOSTS` для GitHub → Settings → Secrets and variables → Actions. Изменения в `ci-release.sh` вступают в силу только после повторного запуска `setup-ci-deploy.sh`. Ручной запуск деплоя: GitHub → Actions → Deploy → Run workflow.
+
+## Бот в MAX
+
+Сайт отвечает боту MAX: на «Старт» и на любое сообщение в личке бот присылает приветствие с кнопкой мини-приложения `/max` (код — `server/maxBot.ts`). Подключение — один раз, от `kegora` на сервере:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KEgoRAval/klassny-remont/main/deployment/setup-max-bot.sh -o /tmp/setup-max.sh
+bash /tmp/setup-max.sh
+```
+
+Скрипт спросит токен бота (не отображается) и ник, проверит токен в API MAX, запишет `MAX_BOT_TOKEN`, `MAX_WEBHOOK_SECRET`, `MAX_BOT_USERNAME` в `shared/.env`, перезапустит сайт. При старте сайт сам подписывает вебхук `https://krem.moscow/api/max/webhook`. Состояние без секретов: `https://krem.moscow/api/max/status`. Если API MAX отдаёт сертификат национального УЦ, скрипт добавляет его только для этого приложения через `NODE_EXTRA_CA_CERTS`.
