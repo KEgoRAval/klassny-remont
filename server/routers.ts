@@ -13,10 +13,15 @@ import {
 import { leadPipelineDeps } from "./leadService";
 import { submitLead } from "./leadPipeline";
 import type { LeadNotification } from "./telegram";
+import { enqueueEstimate, estimateDelayMinutes, estimatesEnabled, type Delivery } from "./estimate/jobs";
+import { estimatesPath } from "./leadService";
+import { verifyMaxInitData } from "./maxInitData";
 
 export const ATTACHMENT_REJECTED_MESSAGE = "Приложите PDF или изображение (JPG, PNG, WebP) размером до 20 МБ.";
-/** The first consent edition that names an attached file; earlier editions cannot carry one. */
-export const ATTACHMENT_CONSENT_VERSION = "2026-10-10";
+/** Consent editions that name an attached file; earlier editions cannot carry one. */
+export const ATTACHMENT_CONSENT_VERSIONS = ["2026-10-10", "2026-10-14"] as const;
+/** The first edition that covers sending the file to Claude for an automatic estimate. */
+export const AUTO_ESTIMATE_CONSENT_VERSION = "2026-10-14";
 export const ATTACHMENT_CONSENT_MESSAGE = "Обновите страницу, чтобы приложить файл: изменился текст согласия.";
 
 export const leadInput = z.object({
@@ -33,11 +38,15 @@ export const leadInput = z.object({
   source: z.enum(["calculator", "contact"]),
   /** Where the form was opened: the site itself or the MAX mini-app. Not stored in the database. */
   channel: z.enum(["site", "max"]).optional(),
+  /** For the automatic estimate when the lead is not from inside MAX. */
+  email: z.string().trim().max(120).email("Укажите корректный email").optional().or(z.literal("").transform(() => undefined)),
+  /** Launch data of the MAX mini-app; verified on the server to know whom the bot may write to. */
+  maxInitData: z.string().max(4096).optional(),
   personalDataConsent: z.literal(true, { error: "Необходимо согласие на обработку персональных данных" }),
   telegramConsent: z.literal(true, { error: "Необходимо согласие на передачу заявки в Telegram" }),
   // Previous editions are still accepted so a page opened before a release can submit its form.
-  consentVersion: z.enum(["2026-09-17", "2026-10-04", "2026-10-10"]),
-  policyVersion: z.enum(["2026-09-17", "2026-10-04", "2026-10-10"]),
+  consentVersion: z.enum(["2026-09-17", "2026-10-04", "2026-10-10", "2026-10-14"]),
+  policyVersion: z.enum(["2026-09-17", "2026-10-04", "2026-10-10", "2026-10-14"]),
   /** Optional design project from the contact form, as base64. Its type is checked from the bytes. */
   attachment: z
     .object({
@@ -51,7 +60,8 @@ export const leadInput = z.object({
 export function readLeadAttachment({ attachment, consentVersion, policyVersion }: Pick<z.infer<typeof leadInput>, "attachment" | "consentVersion" | "policyVersion">) {
   if (!attachment) return undefined;
   // A file may only travel under the consent text that names it.
-  if (consentVersion !== ATTACHMENT_CONSENT_VERSION || policyVersion !== ATTACHMENT_CONSENT_VERSION) {
+  const editions: readonly string[] = ATTACHMENT_CONSENT_VERSIONS;
+  if (!editions.includes(consentVersion) || !editions.includes(policyVersion)) {
     throw new TRPCError({ code: "BAD_REQUEST", message: ATTACHMENT_CONSENT_MESSAGE });
   }
   const bytes = Buffer.from(attachment.data, "base64");
@@ -63,6 +73,19 @@ export function readLeadAttachment({ attachment, consentVersion, policyVersion }
     bytes,
     description: { fileName: safeAttachmentName(attachment.fileName, mimeType), mimeType, size: bytes.length },
   };
+}
+
+/** Whom the automatic estimate goes to: the verified MAX user first, else the email from the form. */
+export function estimateDelivery(maxInitData: string | undefined, email: string | undefined): Delivery | null {
+  const max = verifyMaxInitData(maxInitData, process.env.MAX_BOT_TOKEN ?? "");
+  if (max) return { kind: "max", userId: max.userId };
+  if (email) return { kind: "email", address: email };
+  return null;
+}
+
+function autoEstimateNote(delivery: Delivery): string {
+  const at = new Date(Date.now() + estimateDelayMinutes() * 60_000).toLocaleTimeString("ru-RU", { timeZone: "Europe/Moscow", hour: "2-digit", minute: "2-digit" });
+  return `считается; клиенту ${delivery.kind === "max" ? "в бот MAX" : `на ${delivery.address}`} в ${at} (МСК), копия придёт сюда`;
 }
 
 export const appRouter = router({
@@ -77,13 +100,16 @@ export const appRouter = router({
   }),
   leads: router({
     submit: publicProcedure.input(leadInput).mutation(async ({ input }) => {
-      const { attachment, materialsEstimate: _materials, totalEstimate: _total, ...fields } = input;
+      const { attachment, materialsEstimate: _materials, totalEstimate: _total, maxInitData, ...fields } = input;
       const file = readLeadAttachment(input);
+      // Only a lead given under the edition that names the automatic estimate gets one.
+      const estimateConsent = fields.consentVersion === AUTO_ESTIMATE_CONSENT_VERSION && fields.policyVersion === AUTO_ESTIMATE_CONSENT_VERSION;
+      const delivery = file && estimateConsent && estimatesEnabled() ? estimateDelivery(maxInitData, fields.email) : null;
       const lead: LeadNotification = file ? { ...fields, attachment: file.description } : fields;
+      if (delivery) lead.autoEstimate = autoEstimateNote(delivery);
       try {
         // The lead is written to disk before Telegram is contacted; see leadPipeline.ts.
         await submitLead(lead, leadPipelineDeps(), file?.bytes);
-        return { success: true } as const;
       } catch (error) {
         console.error("[Lead notification]", error);
         throw new TRPCError({
@@ -91,6 +117,19 @@ export const appRouter = router({
           message: "Не удалось отправить заявку. Пожалуйста, позвоните нам или повторите попытку.",
         });
       }
+      if (file && delivery) {
+        try {
+          enqueueEstimate(estimatesPath(), {
+            client: { name: fields.name, phone: fields.phone },
+            delivery,
+            file: { name: file.description.fileName, mimeType: file.description.mimeType, bytes: file.bytes },
+          });
+        } catch (error) {
+          // The lead itself is already saved and on its way; the estimate is a bonus.
+          console.error("[Estimate] could not queue", error);
+        }
+      }
+      return { success: true } as const;
     }),
   }),
 });

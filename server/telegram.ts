@@ -11,10 +11,14 @@ export type LeadNotification = {
   source: "calculator" | "contact";
   /** The MAX mini-app marks its leads; the site's own forms leave this out. */
   channel?: "site" | "max";
+  /** Where the automatic estimate goes when the lead has no verified MAX user. */
+  email?: string;
+  /** Set when an automatic estimate was queued: where and when it goes to the client. */
+  autoEstimate?: string;
   personalDataConsent: true;
   telegramConsent: true;
-  consentVersion: "2026-09-17" | "2026-10-04" | "2026-10-10";
-  policyVersion: "2026-09-17" | "2026-10-04" | "2026-10-10";
+  consentVersion: "2026-09-17" | "2026-10-04" | "2026-10-10" | "2026-10-14";
+  policyVersion: "2026-09-17" | "2026-10-04" | "2026-10-10" | "2026-10-14";
   /** A design project the client attached to the contact form. */
   attachment?: LeadAttachment;
 };
@@ -66,12 +70,14 @@ export function formatLeadMessage(lead: LeadNotification, options: LeadDeliveryO
     `<b>Клиент:</b> ${escapeHtml(lead.name)}`,
     `<b>Телефон:</b> ${escapeHtml(lead.phone)}`,
     `<b>Запрос:</b> ${escapeHtml(lead.service)}`,
+    ...(lead.email ? [`<b>Email:</b> ${escapeHtml(lead.email)}`] : []),
     "",
     "<b>Параметры расчёта</b>",
     `<b>Площадь:</b> ${lead.area} м²`,
     `<b>${fromMax ? "Квартира" : "Уровень ремонта"}:</b> ${escapeHtml(lead.materialLabel)}`,
     `<b>Работы:</b> от ${formatRubles(lead.workEstimate)}`,
     ...attachmentLines(lead, options),
+    ...(lead.autoEstimate ? ["", `🧾 <b>Автосмета:</b> ${escapeHtml(lead.autoEstimate)}`] : []),
     "",
     `<b>Согласия:</b> обработка ПД и передача в Telegram — получены (${lead.consentVersion})`,
   ].join("\n");
@@ -172,3 +178,23 @@ export async function sendTextToTelegram(
 }
 
 export { escapeHtml };
+
+/** Sends a file with an HTML caption to the operator's chat; used for estimate copies. */
+export async function sendDocumentToTelegram(
+  bytes: Uint8Array,
+  fileName: string,
+  caption: string,
+  fetcher: typeof fetch = fetch,
+  config = {
+    token: process.env.TELEGRAM_BOT_TOKEN ?? "",
+    chatId: process.env.TELEGRAM_CHAT_ID ?? "",
+  },
+): Promise<void> {
+  if (!config.token || !config.chatId) throw new Error("Telegram is not configured");
+  const form = new FormData();
+  form.append("chat_id", config.chatId);
+  form.append("caption", caption.slice(0, TELEGRAM_CAPTION_LIMIT));
+  form.append("parse_mode", "HTML");
+  form.append("document", new Blob([new Uint8Array(bytes)], { type: "application/pdf" }), fileName);
+  await callTelegram(fetcher, config.token, "sendDocument", form, TELEGRAM_UPLOAD_TIMEOUT_MS);
+}

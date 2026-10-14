@@ -8,7 +8,8 @@ import { registerLegacyStorageRedirects } from "./staticAssets";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { registerSeoRoutes } from "./seo";
-import { startLeadRetryLoop } from "../leadService";
+import { estimatesPath, startLeadRetryLoop } from "../leadService";
+import { startEstimateWorker } from "../estimate/jobs";
 import { registerMaxBotRoutes, startMaxBot } from "../maxBot";
 import { serveStatic, setupVite } from "./vite";
 
@@ -68,6 +69,7 @@ async function startServer() {
     console.log(`Server running on http://${host}:${port}/`);
     startLeadRetryLoop();
     startMaxBot(maxBot);
+    startEstimateWorker(estimatesPath());
   });
 }
 
