@@ -27,8 +27,6 @@ export const leadInput = z.object({
   area: z.number().int().min(20).max(400),
   materialLabel: z.string().trim().min(2).max(80),
   workEstimate: z.number().int().min(0).max(50_000_000),
-  /** Upper bound of the preliminary range, sent by the MAX mini-app. */
-  workEstimateMax: z.number().int().min(0).max(50_000_000).optional(),
   // Sent by pages opened before the calculator switched to the cost of work only; accepted and dropped.
   materialsEstimate: z.number().int().min(0).max(50_000_000).optional(),
   totalEstimate: z.number().int().min(0).max(100_000_000).optional(),

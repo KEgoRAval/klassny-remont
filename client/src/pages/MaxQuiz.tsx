@@ -11,7 +11,8 @@ import {
   PROPERTY_TYPES,
   clampArea,
   designStatusLabel,
-  estimateRange,
+  WORK_RATE_FROM,
+  estimateFrom,
   propertyType,
   type DesignStatusId,
   type PropertyTypeId,
@@ -20,18 +21,12 @@ import {
 /**
  * Landing page for the MAX messenger mini-app: one action, two branches.
  * "Project" sends a design project for a full estimate; "quiz" asks three questions and
- * shows a preliminary range before asking for a phone number.
+ * shows the "from" price for the area before asking for a phone number.
  */
 type Step = "start" | "area" | "type" | "design" | "result" | "project" | "done";
 
 const QUIZ_STEPS: Step[] = ["area", "type", "design", "result"];
 const rub = (value: number) => `${value.toLocaleString("ru-RU")} ₽`;
-/** "1,67–1,98 млн ₽": fits one line on a phone, which the full figures do not. */
-const rubRange = (from: number, to: number) => {
-  if (from < 1_000_000) return `${rub(from)} – ${rub(to)}`;
-  const mln = (value: number) => (value / 1_000_000).toLocaleString("ru-RU", { maximumFractionDigits: 2 });
-  return `${mln(from)}–${mln(to)} млн ₽`;
-};
 
 function Progress({ step }: { step: Step }) {
   const index = QUIZ_STEPS.indexOf(step);
@@ -91,7 +86,7 @@ export default function MaxQuiz() {
   const [fileReading, setFileReading] = useState(false);
   const [doneBranch, setDoneBranch] = useState<"project" | "quiz">("quiz");
 
-  const range = estimateRange(area, typeId ?? "new-bare");
+  const workFrom = estimateFrom(area);
   const submit = trpc.leads.submit.useMutation({
     onSuccess: () => {
       reachLeadGoal("lead_max");
@@ -146,8 +141,7 @@ export default function MaxQuiz() {
       service: `MAX: ${details}`.slice(0, 120),
       area,
       materialLabel: type?.label ?? "Не указан",
-      workEstimate: range.from,
-      workEstimateMax: type ? range.to : undefined,
+      workEstimate: workFrom,
       source: branch === "project" ? "contact" : "calculator",
       channel: "max",
       personalDataConsent: true,
@@ -185,7 +179,7 @@ export default function MaxQuiz() {
           <section className="mx-screen">
             <SectionLabel>Ремонт под ключ в Москве</SectionLabel>
             <h1>Посчитаем ваш ремонт<Dot /></h1>
-            <p className="mx-lead">Пришлите дизайн-проект — сделаем смету за 2 часа в рабочее время, бесплатно. Нет проекта — ответьте на 3 вопроса и сразу увидите вилку по стоимости работ.</p>
+            <p className="mx-lead">Пришлите дизайн-проект — сделаем смету за 2 часа в рабочее время, бесплатно. Нет проекта — ответьте на 3 вопроса и сразу увидите ориентир по стоимости работ.</p>
             <div className="mx-choices">
               <button type="button" className="mx-choice mx-choice-main" onClick={() => go("project")}>
                 <span className="mx-choice-icon"><FileText size={22} strokeWidth={ICON_STROKE} /></span>
@@ -246,8 +240,8 @@ export default function MaxQuiz() {
             <SectionLabel tone="sage">Предварительный расчёт</SectionLabel>
             <div className="card elev-md mx-result">
               <span className="mx-result-label">Стоимость работ, {area} м² · {propertyType(typeId ?? "new-bare").label.toLowerCase()}</span>
-              <output className="mx-result-sum" aria-live="polite">{rubRange(range.from, range.to)}</output>
-              <small>Без материалов, мебели и декора. Точную сумму зафиксируем в смете после замера{designId === "in-progress" ? " или по готовому проекту" : ""}.</small>
+              <output className="mx-result-sum" aria-live="polite">от {rub(workFrom)}</output>
+              <small>Работы — от {rub(WORK_RATE_FROM)}/м², без материалов, мебели и декора. Точную сумму зафиксируем в смете после замера{designId === "in-progress" ? " или по готовому проекту" : ""}.</small>
             </div>
             <form className="k-form mx-form" onSubmit={(e) => { e.preventDefault(); void send("quiz"); }}>
               <h3>Получить точный расчёт</h3>

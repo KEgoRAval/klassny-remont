@@ -8,8 +8,7 @@ const maxLead: LeadNotification = {
   service: "MAX: Предварительный расчёт · проект: нет проекта",
   area: 38,
   materialLabel: "Вторичка",
-  workEstimate: 1_670_000,
-  workEstimateMax: 1_980_000,
+  workEstimate: 1_520_000,
   source: "calculator",
   channel: "max",
   personalDataConsent: true,
@@ -30,18 +29,18 @@ describe("MAX mini-app leads", () => {
     expect(() => leadInput.parse({ ...maxLead, area: 500 })).toThrow();
   });
 
-  it("tells the team the lead came from MAX and what range the client saw", () => {
+  it("tells the team the lead came from MAX and what the client chose", () => {
     const message = formatLeadMessage(maxLead).replace(/\u00a0|\u202f/g, " ");
     expect(message).toContain("MAX · предварительный расчёт");
     expect(message).toContain("<b>Квартира:</b> Вторичка");
-    expect(message).toContain("1 670 000 ₽ – 1 980 000 ₽ (показано клиенту)");
+    expect(message).toContain("<b>Работы:</b> от 1 520 000 ₽");
   });
 
   it("leaves site leads formatted as before", () => {
-    const { channel: _c, workEstimateMax: _m, ...siteLead } = maxLead;
+    const { channel: _c, ...siteLead } = maxLead;
     const message = formatLeadMessage({ ...siteLead, materialLabel: "Рациональный" }).replace(/\u00a0|\u202f/g, " ");
     expect(message).toContain("<b>Источник:</b> Калькулятор");
     expect(message).toContain("<b>Уровень ремонта:</b> Рациональный");
-    expect(message).toContain("от 1 670 000 ₽");
+    expect(message).toContain("от 1 520 000 ₽");
   });
 });
