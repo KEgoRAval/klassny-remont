@@ -9,6 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { registerSeoRoutes } from "./seo";
 import { startLeadRetryLoop } from "../leadService";
+import { registerMaxBotRoutes, startMaxBot } from "../maxBot";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -39,6 +40,7 @@ async function startServer() {
   registerLegacyStorageRedirects(app);
   registerOAuthRoutes(app);
   registerSeoRoutes(app);
+  const maxBot = registerMaxBotRoutes(app);
   // tRPC API
   app.use(
     "/api/trpc",
@@ -65,6 +67,7 @@ async function startServer() {
   server.listen(port, host, () => {
     console.log(`Server running on http://${host}:${port}/`);
     startLeadRetryLoop();
+    startMaxBot(maxBot);
   });
 }
 
