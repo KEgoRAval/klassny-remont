@@ -145,6 +145,7 @@ export default function Home() {
   const [contactPhone, setContactPhone] = useState("");
   const [contactService, setContactService] = useState("");
   const [contactFile, setContactFile] = useState<File | null>(null);
+  const [contactEmail, setContactEmail] = useState("");
   const [contactFileError, setContactFileError] = useState("");
   const [contactFileReading, setContactFileReading] = useState(false);
   const [contactPersonalDataConsent, setContactPersonalDataConsent] = useState(false);
@@ -166,6 +167,7 @@ export default function Home() {
       setContactPhone("");
       setContactService("");
       setContactFile(null);
+      setContactEmail("");
       setContactFileError("");
       setContactPersonalDataConsent(false);
       setContactTelegramConsent(false);
@@ -200,7 +202,7 @@ export default function Home() {
         setContactFileReading(false);
       }
     }
-    submitContactLead.mutate({ name: contactName, phone: contactPhone, service: contactService, source: "contact", ...calculator, personalDataConsent: contactPersonalDataConsent, telegramConsent: contactTelegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION, attachment });
+    submitContactLead.mutate({ name: contactName, phone: contactPhone, service: contactService, source: "contact", ...calculator, personalDataConsent: contactPersonalDataConsent, telegramConsent: contactTelegramConsent, consentVersion: PERSONAL_DATA_CONSENT_VERSION, policyVersion: PERSONAL_DATA_CONSENT_VERSION, attachment, email: contactFile ? contactEmail : undefined });
   };
 
   useEffect(() => {
@@ -363,6 +365,7 @@ export default function Home() {
                     {contactFileError ? <p className="form-error" id="contact-file-error" role="alert">{contactFileError}</p> : <small className="k-file-hint">Файл увидит только команда «Классного ремонта». Не прикладывайте паспортные данные и другие документы, не нужные для расчёта.</small>}
                   </div>
                 )}
+                {contactFile && <div className="field"><label htmlFor="contact-email">Email — пришлём смету по проекту</label><input className="ym-record-keys" value={contactEmail} id="contact-email" type="email" autoComplete="email" onChange={(e) => setContactEmail(e.target.value)} disabled={contactSending} required placeholder="name@mail.ru" /></div>}
                 <PersonalDataConsent formId="contact-form" personalDataConsent={contactPersonalDataConsent} telegramConsent={contactTelegramConsent} disabled={submitContactLead.isPending} showValidation={showContactConsentValidation} onConsentInvalid={() => setShowContactConsentValidation(true)} onPersonalDataConsentChange={setContactPersonalDataConsent} onTelegramConsentChange={setContactTelegramConsent} />
                 <button type="submit" disabled={contactSending} className={contactSending ? "btn btn-primary k-btn-lg k-btn-block form-submit-loading" : "btn btn-primary k-btn-lg k-btn-block"}>{contactSending ? <SendingContent label="Заявка отправляется" /> : <>Отправить заявку <ArrowRight size={18} strokeWidth={ICON_STROKE} /></>}</button>
                 {submitContactLead.isError && <p className="form-error">{DESIGN_FILE_SERVER_MESSAGES.includes(submitContactLead.error.message) ? submitContactLead.error.message : "Не удалось отправить заявку. Позвоните нам или повторите попытку."}</p>}

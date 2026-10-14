@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Calculator, Check, FileText, Paperclip, Phone, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { reachLeadGoal } from "@/lib/metrika";
@@ -68,6 +68,21 @@ function AreaField({ area, onChange }: { area: number; onChange: (value: number)
   );
 }
 
+/**
+ * Launch data MAX passes to a mini-app: window.WebApp.initData, also the WebAppData
+ * parameter of the URL fragment. Absent when the page is opened in a browser.
+ */
+function readMaxInitData(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const bridge = (window as unknown as { WebApp?: { initData?: string } }).WebApp?.initData;
+  if (bridge) return bridge;
+  try {
+    return new URLSearchParams(window.location.hash.replace(/^#/, "")).get("WebAppData") || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function SendingContent({ label }: { label: string }) {
   return <><span className="button-loader" aria-hidden="true"><i></i><i></i><i></i></span><span>{label}</span></>;
 }
@@ -85,6 +100,11 @@ export default function MaxQuiz() {
   const [fileError, setFileError] = useState("");
   const [fileReading, setFileReading] = useState(false);
   const [doneBranch, setDoneBranch] = useState<"project" | "quiz">("quiz");
+  const [email, setEmail] = useState("");
+  // Read after hydration (the server render has no window); the server decides whether it is genuine.
+  const [maxInitData, setMaxInitData] = useState<string | undefined>(undefined);
+  useEffect(() => setMaxInitData(readMaxInitData()), []);
+  const insideMax = Boolean(maxInitData);
 
   const workFrom = estimateFrom(area);
   const submit = trpc.leads.submit.useMutation({
@@ -149,6 +169,8 @@ export default function MaxQuiz() {
       consentVersion: PERSONAL_DATA_CONSENT_VERSION,
       policyVersion: PERSONAL_DATA_CONSENT_VERSION,
       attachment,
+      maxInitData: branch === "project" ? maxInitData : undefined,
+      email: branch === "project" && !insideMax ? email : undefined,
     });
   };
 
@@ -257,7 +279,7 @@ export default function MaxQuiz() {
           <section className="mx-screen">
             <SectionLabel>Смета по дизайн-проекту</SectionLabel>
             <h2>Пришлите проект — смета за 2 часа<Dot /></h2>
-            <p className="mx-lead">Считаем по нашему прайсу построчно, бесплатно. Если проект пришёл вечером или в выходные — смета будет в течение первых двух рабочих часов.</p>
+            <p className="mx-lead">Считаем по нашему прайсу построчно, бесплатно. Готовую смету в PDF пришлём {insideMax ? "в чат с ботом" : "на почту"}.</p>
             <form className="k-form mx-form" onSubmit={(e) => { e.preventDefault(); void send("project"); }}>
               <div className="k-file-field">
                 <label className={file ? "k-file k-file-chosen" : "k-file"} htmlFor="mx-file">
@@ -269,6 +291,7 @@ export default function MaxQuiz() {
                 {fileError ? <p className="form-error" id="mx-file-error" role="alert">{fileError}</p> : <small className="k-file-hint">Файл увидит только команда «Классного ремонта». Не прикладывайте паспортные данные и другие документы, не нужные для расчёта.</small>}
               </div>
               <AreaField area={area} onChange={setArea} />
+              {!insideMax && <div className="field"><label htmlFor="mx-project-email">Email — пришлём смету сюда</label><input className="ym-record-keys" id="mx-project-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={sending} required autoComplete="email" placeholder="name@mail.ru" /></div>}
               {contactFields("mx-project")}
               <button type="submit" disabled={sending} className={sending ? "btn btn-primary k-btn-lg k-btn-block form-submit-loading" : "btn btn-primary k-btn-lg k-btn-block"}>{sending ? <SendingContent label={fileReading ? "Загружаем файл" : "Отправляем"} /> : <>Отправить проект<ArrowRight size={18} strokeWidth={ICON_STROKE} /></>}</button>
             </form>
@@ -280,7 +303,7 @@ export default function MaxQuiz() {
           <section className="mx-screen mx-done">
             <span className="k-thankyou-check" aria-hidden="true"><Check size={30} strokeWidth={ICON_STROKE} /></span>
             <h2>Спасибо{name ? `, ${name}` : ""}!</h2>
-            <p className="mx-lead">{doneBranch === "project" ? "Проект получили. Смета будет в течение 2 рабочих часов — пришлём её и позвоним, если появятся вопросы по проекту." : "Заявка у нас. Перезвоним в течение 2 рабочих часов и назовём точную сумму."}</p>
+            <p className="mx-lead">{doneBranch === "project" ? `Проект получили. Смета придёт ${insideMax ? "в этот чат" : "на почту"} в течение двух часов — позвоним, если появятся вопросы по проекту.` : "Заявка у нас. Перезвоним в течение 2 рабочих часов и назовём точную сумму."}</p>
             <a className="btn btn-secondary k-btn-md" href="/">Посмотреть наши проекты</a>
           </section>
         )}

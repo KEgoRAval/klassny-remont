@@ -160,7 +160,7 @@ describe("lead form feedback", () => {
   it("offers the design-project upload in the contact form with a note on what not to attach", () => {
     expect(source).toContain("const DESIGN_FILE_UPLOAD_ENABLED = true;");
     expect(source).toContain("accept={DESIGN_FILE_ACCEPT}");
-    expect(source).toContain("attachment });");
+    expect(source).toContain("attachment, email: contactFile ? contactEmail : undefined });");
     expect(source).toContain("Не прикладывайте паспортные данные и другие документы, не нужные для расчёта.");
   });
 

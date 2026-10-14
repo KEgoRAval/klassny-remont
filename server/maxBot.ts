@@ -23,7 +23,7 @@ export const MAX_SECRET_HEADER = "x-max-bot-api-secret";
 const MINI_APP_PATH = "/max?utm_source=max_bot";
 const PHONE = "8 (977) 948‑06‑72";
 
-type MaxConfig = {
+export type MaxConfig = {
   token: string;
   secret: string;
   username: string;
@@ -232,6 +232,40 @@ async function callMax(config: MaxConfig, method: "GET" | "POST", path: string, 
     throw new Error(`MAX ${method} ${path.split("?")[0]} failed: ${response.status} ${detail}`.slice(0, 300));
   }
   return response.json().catch(() => ({}));
+}
+
+/**
+ * Sends a file to a user: get an upload URL, upload the bytes, then send a message with the token.
+ * MAX may answer "attachment.not.ready" right after an upload; that is retried a few times.
+ */
+export async function sendMaxFile(
+  config: MaxConfig,
+  userId: number,
+  bytes: Uint8Array,
+  fileName: string,
+  text: string,
+  fetcher: typeof fetch = fetch,
+  wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
+): Promise<void> {
+  const endpoint = (await callMax(config, "POST", "/uploads?type=file", undefined, fetcher)) as { url?: string };
+  if (!endpoint.url) throw new Error("MAX returned no upload URL");
+  const form = new FormData();
+  form.append("data", new Blob([new Uint8Array(bytes)], { type: "application/pdf" }), fileName);
+  const uploaded = await fetcher(endpoint.url, { method: "POST", headers: { Authorization: config.token }, body: form, signal: AbortSignal.timeout(60_000) });
+  if (!uploaded.ok) throw new Error(`MAX upload failed: ${uploaded.status}`);
+  const info = (await uploaded.json().catch(() => ({}))) as { token?: string };
+  if (!info.token) throw new Error("MAX upload returned no token");
+  const body = { text, attachments: [{ type: "file", payload: { token: info.token } }] };
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await callMax(config, "POST", `/messages?user_id=${encodeURIComponent(String(userId))}`, body, fetcher);
+      return;
+    } catch (error) {
+      const notReady = error instanceof Error && error.message.includes("attachment.not.ready");
+      if (!notReady || attempt >= 5) throw error;
+      await wait(2_000 * attempt);
+    }
+  }
 }
 
 export async function sendReply(config: MaxConfig, userId: number, text: string, fetcher: typeof fetch = fetch, extra: Button[][] = []) {

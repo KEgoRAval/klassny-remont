@@ -146,7 +146,7 @@ describe("Metrika wiring in the site", () => {
   });
 
   it("lets session recordings show what visitors type into the lead forms, as the owner decided", () => {
-    for (const [file, fields] of [["client/src/pages/Home.tsx", 4], ["client/src/pages/Blog.tsx", 2]] as const) {
+    for (const [file, fields] of [["client/src/pages/Home.tsx", 5], ["client/src/pages/Blog.tsx", 2]] as const) {
       const page = source(file);
       expect(page.split('<input className="ym-record-keys" value={').length - 1, file).toBe(fields);
       expect(page, file).not.toContain("<input value={");
