@@ -1,0 +1,55 @@
+# Deploys main to krem.moscow after every merge.
+# Server side: deployment/setup-ci-deploy.sh (run once) and deployment/ci-release.sh.
+# Secrets: DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS (printed by setup-ci-deploy.sh).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # A type error stops the deploy here instead of on the server.
+      - name: Typecheck
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm check
+
+      - name: Release on the server
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$DEPLOY_SSH_KEY" ] || [ -z "$DEPLOY_KNOWN_HOSTS" ]; then
+            echo "::error::Secrets DEPLOY_SSH_KEY and DEPLOY_KNOWN_HOSTS are not set; run deployment/setup-ci-deploy.sh on the server."
+            exit 1
+          fi
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 0600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The key is restricted to running the release on the server; no command is sent.
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 kegora@89.117.149.68
+
+      # A 404 here means the release did not include the MAX page.
+      - name: Check the site
+        run: |
+          curl -fsS --max-time 30 -o /dev/null https://krem.moscow/
+          curl -fsS --max-time 30 -o /dev/null https://krem.moscow/max
