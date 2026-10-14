@@ -74,6 +74,19 @@ export const QUESTION_TEXT = [
   "Или сразу посчитайте ремонт по кнопке ниже.",
 ].join("\n");
 
+export const MANAGER_TEXT = [
+  "Нажмите «Передать менеджеру» — мы получим ваш номер и перезвоним в рабочее время. Можно сначала написать вопрос сообщением.",
+  "",
+  "Нажимая кнопку, вы соглашаетесь на обработку имени, телефона и текста сообщения и их передачу оператору через Telegram: krem.moscow/privacy-policy#max",
+].join("\n");
+
+/** The command menu MAX shows next to the message field. */
+export const BOT_COMMANDS = [
+  { name: "raschet", description: "Рассчитать ремонт" },
+  { name: "manager", description: "Связаться с менеджером" },
+  { name: "start", description: "Начать сначала" },
+];
+
 export const THANKS_TEXT = `Спасибо! Передали ваш вопрос менеджеру — перезвоним в рабочее время. Срочно — звоните: ${PHONE}.`;
 export const FORWARD_FAILED_TEXT = `Не получилось передать сообщение. Пожалуйста, позвоните: ${PHONE}.`;
 
@@ -212,6 +225,16 @@ export async function handleUpdate(update: MaxUpdate, deps: Deps): Promise<void>
   }
 
   const text = update.message?.body?.text?.trim();
+  const command = text?.match(/^\/([a-z_]+)(?:@\S+)?$/i)?.[1]?.toLowerCase();
+  if (command) {
+    if (command === "manager") {
+      await deps.reply(userId, MANAGER_TEXT, [[CONTACT_BUTTON]]);
+    } else {
+      // /start, /raschet and anything unknown: the greeting with the mini-app button.
+      await deps.reply(userId, WELCOME_TEXT);
+    }
+    return;
+  }
   const extras = attachments
     .filter(item => item.type && item.type !== "inline_keyboard")
     .map(item => `[${ATTACHMENT_LABELS[item.type!] ?? "вложение"}]`);
@@ -220,7 +243,7 @@ export async function handleUpdate(update: MaxUpdate, deps: Deps): Promise<void>
   if (deps.inbox.add(userId, note)) await deps.reply(userId, QUESTION_TEXT, [[CONTACT_BUTTON]]);
 }
 
-async function callMax(config: MaxConfig, method: "GET" | "POST", path: string, body: unknown, fetcher: typeof fetch) {
+async function callMax(config: MaxConfig, method: "GET" | "POST" | "PATCH", path: string, body: unknown, fetcher: typeof fetch) {
   const response = await fetcher(`${config.apiBase}${path}`, {
     method,
     headers: { Authorization: config.token, "Content-Type": "application/json" },
@@ -344,6 +367,16 @@ export function startMaxBot(config: MaxConfig | null, fetcher: typeof fetch = fe
     return;
   }
   void subscribeWebhook(config, fetcher);
+  void setCommands(config, fetcher);
+}
+
+export async function setCommands(config: MaxConfig, fetcher: typeof fetch = fetch): Promise<void> {
+  try {
+    await callMax(config, "PATCH", "/me/commands", { commands: BOT_COMMANDS }, fetcher);
+    console.log("[MAX] commands set");
+  } catch (error) {
+    console.error("[MAX] commands not set:", scrub(String(error instanceof Error ? error.message : error), config));
+  }
 }
 
 /** For tests. */

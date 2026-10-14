@@ -1,7 +1,7 @@
 import express from "express";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { FORWARD_FAILED_TEXT, Inbox, MAX_SECRET_HEADER, QUESTION_TEXT, THANKS_TEXT, WELCOME_TEXT, handleUpdate, maxConfig, phoneFromVcf, registerMaxBotRoutes, replyButtons, resetMaxStatus, subscribeWebhook } from "./maxBot";
+import { FORWARD_FAILED_TEXT, Inbox, MANAGER_TEXT, setCommands, MAX_SECRET_HEADER, QUESTION_TEXT, THANKS_TEXT, WELCOME_TEXT, handleUpdate, maxConfig, phoneFromVcf, registerMaxBotRoutes, replyButtons, resetMaxStatus, subscribeWebhook } from "./maxBot";
 
 const env = {
   MAX_BOT_TOKEN: "tok_123",
@@ -86,6 +86,25 @@ describe("MAX bot replies", () => {
     await handleUpdate({ update_type: "bot_started", user: { user_id: 7, is_bot: true } }, h.deps);
     await handleUpdate({ update_type: "message_created", message: { sender: { user_id: 8 }, recipient: { chat_type: "chat" }, body: { text: "hi" } } }, h.deps);
     expect(h.replies).toHaveLength(0);
+  });
+
+  it("answers menu commands without storing them as questions", async () => {
+    const h = harness();
+    await handleUpdate(userMessage("/raschet"), h.deps);
+    await handleUpdate(userMessage("/manager"), h.deps);
+    await handleUpdate(userMessage("/start"), h.deps);
+    expect(h.replies.map(r => r.text)).toEqual([WELCOME_TEXT, MANAGER_TEXT, WELCOME_TEXT]);
+    expect(JSON.stringify(h.replies[1].buttons)).toContain("request_contact");
+    expect(h.deps.inbox.texts(8)).toEqual([]);
+  });
+
+  it("sets the command menu", async () => {
+    const calls: Call[] = [];
+    const fetcher = (async (url: string, init: RequestInit) => { calls.push({ url, init }); return new Response("{}", { status: 200 }); }) as unknown as typeof fetch;
+    await setCommands(maxConfig(env)!, fetcher);
+    expect(calls[0].url).toBe("https://platform-api2.max.ru/me/commands");
+    expect(calls[0].init.method).toBe("PATCH");
+    expect(JSON.parse(String(calls[0].init.body)).commands.map((c: { name: string }) => c.name)).toEqual(["raschet", "manager", "start"]);
   });
 
   it("reads the phone from a vCard", () => {
