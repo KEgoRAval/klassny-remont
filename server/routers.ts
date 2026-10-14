@@ -23,13 +23,18 @@ export const leadInput = z.object({
   name: z.string().trim().min(2, "Укажите имя").max(80),
   phone: z.string().trim().min(6, "Укажите телефон").max(40),
   service: z.string().trim().min(2).max(120),
-  area: z.number().int().min(50).max(250),
+  // The site calculator sends 50–250 m²; the MAX mini-app asks for the exact area.
+  area: z.number().int().min(20).max(400),
   materialLabel: z.string().trim().min(2).max(80),
   workEstimate: z.number().int().min(0).max(50_000_000),
+  /** Upper bound of the preliminary range, sent by the MAX mini-app. */
+  workEstimateMax: z.number().int().min(0).max(50_000_000).optional(),
   // Sent by pages opened before the calculator switched to the cost of work only; accepted and dropped.
   materialsEstimate: z.number().int().min(0).max(50_000_000).optional(),
   totalEstimate: z.number().int().min(0).max(100_000_000).optional(),
   source: z.enum(["calculator", "contact"]),
+  /** Where the form was opened: the site itself or the MAX mini-app. Not stored in the database. */
+  channel: z.enum(["site", "max"]).optional(),
   personalDataConsent: z.literal(true, { error: "Необходимо согласие на обработку персональных данных" }),
   telegramConsent: z.literal(true, { error: "Необходимо согласие на передачу заявки в Telegram" }),
   // Previous editions are still accepted so a page opened before a release can submit its form.

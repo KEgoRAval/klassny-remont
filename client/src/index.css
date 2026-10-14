@@ -422,3 +422,41 @@ details[open] .k-faq-minus{display:block}
 @media(min-width:761px){.cookie-consent~.messenger-quick-actions{bottom:172px}}
 @media(max-width:760px){.messenger-quick-actions{right:12px;bottom:12px}.messenger-quick-label{display:none}}
 @media(prefers-reduced-motion:reduce){.messengers a{transition:none}}
+
+/* MAX mini-app (/max): one column, thumb-sized targets, no site chrome. */
+.mx-page{display:flex;flex-direction:column}
+.mx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;border-bottom:1px solid var(--k-divider)}
+.mx-top a{display:flex;text-decoration:none}
+.mx-call{width:44px;height:44px;border-radius:999px;background:var(--k-surface);align-items:center;justify-content:center}
+.mx-main{width:100%;max-width:560px;margin-inline:auto;padding:24px 20px 48px;display:flex;flex-direction:column;gap:20px}
+.mx-progress{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mx-progress span{height:4px;border-radius:999px;background:var(--k-neutral-300)}
+.mx-progress span.is-on{background:var(--k-accent)}
+.mx-screen{display:flex;flex-direction:column;gap:18px}
+.krem-site .mx-screen h1{font-size:clamp(36px,9vw,52px);line-height:1}
+.krem-site .mx-screen h2{font-size:clamp(28px,7vw,40px);line-height:1.05}
+.mx-lead{font-size:16px;line-height:1.55;color:var(--k-neutral-800)}
+.mx-footnote{font-size:13px;color:var(--k-neutral-700)}
+.mx-choices,.mx-options{display:flex;flex-direction:column;gap:10px}
+.mx-choice,.mx-option{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;padding:16px 18px;border:1px solid var(--k-divider);border-radius:24px;background:var(--k-surface);color:var(--k-text);font:inherit;text-align:left;cursor:pointer;transition:border-color .18s ease,background-color .18s ease}
+.mx-choice:hover,.mx-option:hover{border-color:var(--k-accent)}
+.mx-choice>span:nth-child(2){flex:1;display:flex;flex-direction:column;gap:2px}
+.mx-choice b,.mx-option b{font-size:16px;font-weight:700}
+.mx-choice small,.mx-option small{font-size:13px;color:var(--k-neutral-700)}
+.mx-choice-main{background:var(--k-accent);border-color:var(--k-accent);color:var(--k-bg)}
+.mx-choice-main:hover{background:var(--k-accent-600)}
+.mx-choice-main small{color:color-mix(in srgb,var(--k-bg) 80%,transparent)}
+.mx-choice-icon{flex:none;width:44px;height:44px;border-radius:999px;display:grid;place-items:center;background:color-mix(in srgb,currentColor 12%,transparent)}
+.mx-option{flex-direction:column;align-items:flex-start;gap:2px}
+.mx-option.is-on{border-color:var(--k-accent);background:var(--k-accent-100)}
+.krem-site .mx-card{background:var(--k-neutral-100)}
+.krem-site .mx-area-input{flex:none;width:88px;max-width:88px;min-height:44px;padding:4px 12px;border:1px solid var(--k-divider);border-radius:999px;background:var(--k-bg);color:var(--k-text);font-family:var(--k-font-heading);font-weight:800;font-size:20px;text-align:center}
+.mx-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.krem-site .mx-back{padding-inline:4px}
+.krem-site .mx-result{gap:8px;background:var(--k-neutral-900);color:var(--k-bg)}
+.mx-result-label{font-size:14px;color:color-mix(in srgb,var(--k-bg) 75%,transparent)}
+.mx-result-sum{font-family:var(--k-font-heading);font-weight:800;font-size:clamp(26px,7vw,36px);line-height:1.1;letter-spacing:-.02em}
+.mx-result small{font-size:13px;line-height:1.45;color:color-mix(in srgb,var(--k-bg) 75%,transparent)}
+.mx-form{padding:22px;border-radius:28px;background:var(--k-surface)}
+.mx-form-copy{font-size:14px;color:var(--k-neutral-800)}
+.mx-done{align-items:flex-start;padding-top:24px}

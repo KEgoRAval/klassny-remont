@@ -12,6 +12,7 @@
  *   lead_calculator  — "Запишитесь на замер" from the calculator
  *   lead_contact     — contact form at the bottom of the home page
  *   lead_blog        — estimate form on a residential-complex article
+ *   lead_max         — the MAX mini-app at /max (either branch)
  *   click_phone, click_telegram, click_whatsapp — clicks on contact links
  */
 export const YANDEX_METRIKA_ID = 113397509;
@@ -21,6 +22,7 @@ export type MetrikaGoal =
   | "lead_calculator"
   | "lead_contact"
   | "lead_blog"
+  | "lead_max"
   | "click_phone"
   | "click_telegram"
   | "click_whatsapp";
@@ -49,7 +51,7 @@ export function reachGoal(goal: MetrikaGoal, win: MetrikaWindow = browserWindow(
 }
 
 /** A submitted form: the common "lead" goal plus the goal of the specific form. */
-export function reachLeadGoal(form: "lead_calculator" | "lead_contact" | "lead_blog", win: MetrikaWindow = browserWindow()): void {
+export function reachLeadGoal(form: "lead_calculator" | "lead_contact" | "lead_blog" | "lead_max", win: MetrikaWindow = browserWindow()): void {
   reachGoal("lead", win);
   reachGoal(form, win);
 }

@@ -89,6 +89,18 @@ export function prefetchForPath(url: string): HeadMeta {
     };
   }
 
+  if (path === "/max") {
+    // Opened from the MAX messenger bot; not a search landing page.
+    return {
+      title: "Расчёт ремонта — Классный Ремонт",
+      description: "Пришлите дизайн-проект — смета за 2 часа. Или ответьте на 3 вопроса и получите предварительный расчёт стоимости ремонта квартиры в Москве.",
+      ogType: "website",
+      ogImage: ogImageFor(siteImages.hero.src),
+      canonicalPath: "/max",
+      noindex: true,
+    };
+  }
+
   if (path === "/privacy-policy") {
     return {
       title: "Политика обработки персональных данных — Классный Ремонт",

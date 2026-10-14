@@ -8,7 +8,11 @@ export type LeadNotification = {
   materialLabel: string;
   /** The calculator estimates the cost of work only; materials go into the estimate as a separate line. */
   workEstimate: number;
+  /** Upper bound of the preliminary range shown in the MAX mini-app. */
+  workEstimateMax?: number;
   source: "calculator" | "contact";
+  /** The MAX mini-app marks its leads; the site's own forms leave this out. */
+  channel?: "site" | "max";
   personalDataConsent: true;
   telegramConsent: true;
   consentVersion: "2026-09-17" | "2026-10-04" | "2026-10-10";
@@ -49,7 +53,12 @@ const formatMoscowTime = (iso: string) =>
   });
 
 export function formatLeadMessage(lead: LeadNotification, options: LeadDeliveryOptions = {}): string {
-  const source = lead.source === "calculator" ? "Калькулятор" : "Контактная форма";
+  const form = lead.source === "calculator" ? "Калькулятор" : "Контактная форма";
+  const fromMax = lead.channel === "max";
+  const source = fromMax ? `MAX · ${lead.source === "calculator" ? "предварительный расчёт" : "смета по дизайн-проекту"}` : form;
+  const work = lead.workEstimateMax && lead.workEstimateMax > lead.workEstimate
+    ? `${formatRubles(lead.workEstimate)} – ${formatRubles(lead.workEstimateMax)}`
+    : `от ${formatRubles(lead.workEstimate)}`;
   const delayNote = options.delayedSince
     ? [`⚠️ <b>Доставлено с задержкой.</b> Заявка получена ${formatMoscowTime(options.delayedSince)} (МСК)`, ""]
     : [];
@@ -65,8 +74,8 @@ export function formatLeadMessage(lead: LeadNotification, options: LeadDeliveryO
     "",
     "<b>Параметры расчёта</b>",
     `<b>Площадь:</b> ${lead.area} м²`,
-    `<b>Уровень ремонта:</b> ${escapeHtml(lead.materialLabel)}`,
-    `<b>Работы:</b> от ${formatRubles(lead.workEstimate)}`,
+    `<b>${fromMax ? "Квартира" : "Уровень ремонта"}:</b> ${escapeHtml(lead.materialLabel)}`,
+    `<b>Работы:</b> ${work}${fromMax ? " (показано клиенту)" : ""}`,
     ...attachmentLines(lead, options),
     "",
     `<b>Согласия:</b> обработка ПД и передача в Telegram — получены (${lead.consentVersion})`,

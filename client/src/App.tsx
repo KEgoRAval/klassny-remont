@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Head } from "./components/Head";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -10,12 +10,14 @@ import { PersonalDataConsentPage, PrivacyPolicy } from "./pages/Legal";
 import { CookieConsent } from "./components/CookieConsent";
 import { MessengerQuickActions } from "./components/MessengerQuickActions";
 import Home from "./pages/Home";
+import MaxQuiz from "./pages/MaxQuiz";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/max"} component={MaxQuiz} />
       <Route path={"/blog"} component={BlogIndex} />
       <Route path={"/blog/:slug"} component={BlogArticle} />
       <Route path={"/privacy-policy"} component={PrivacyPolicy} />
@@ -32,6 +34,12 @@ function Router() {
 //   to keep consistent foreground/background color across components
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
+/** The MAX mini-app page has one action; the floating Telegram/WhatsApp buttons would compete with it. */
+function QuickActions() {
+  const [location] = useLocation();
+  return location.replace(/\/+$/, "") === "/max" ? null : <MessengerQuickActions />;
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -44,7 +52,7 @@ function App() {
           <Toaster />
           <Router />
           <CookieConsent />
-          <MessengerQuickActions />
+          <QuickActions />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
