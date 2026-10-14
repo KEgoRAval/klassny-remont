@@ -5,8 +5,8 @@ import {
   MessageCircle,
   Paperclip,
   Phone,
+  Play,
   Send,
-  Star,
   X,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -15,6 +15,7 @@ import { TELEGRAM_URL, WHATSAPP_URL } from "@/components/MessengerQuickActions";
 import { imageSize, siteImages } from "@/content/media";
 import { reachLeadGoal } from "@/lib/metrika";
 import { Dot, FaqIcon, ICON_STROKE, SectionLabel, SiteFooter, SiteHeader } from "@/components/KremChrome";
+import { ProjectVideoModal, type ProjectVideoSource } from "@/components/ProjectVideo";
 import { DESIGN_FILE_ACCEPT, DESIGN_FILE_SERVER_MESSAGES, designFileProblem, formatFileSize, readFileAsBase64 } from "@/lib/designFile";
 
 const images = {
@@ -29,8 +30,16 @@ const images = {
   everShower: siteImages.everShower.src,
 };
 
-const projectCards = [
-  { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная" },
+const veryVideo: ProjectVideoSource = {
+  src: "/media/video/very-walkthrough.mp4",
+  poster: images.veryLiving,
+  title: "ЖК Very — проход по квартире",
+  width: 720,
+  height: 956,
+};
+
+const projectCards: { image: string; title: string; meta: string; video?: ProjectVideoSource }[] = [
+  { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная", video: veryVideo },
   { image: images.everLiving, title: "ЖК Ever", meta: "Кухня-гостиная" },
   { image: images.veryBedroom, title: "ЖК Остров", meta: "Спальня" },
   { image: images.everEntry, title: "ЖК Level", meta: "Прихожая" },
@@ -129,6 +138,7 @@ function LeadModal({ open, onClose, onSuccess, calculator }: { open: boolean; on
 
 export default function Home() {
   const [leadOpen, setLeadOpen] = useState(false);
+  const [projectVideo, setProjectVideo] = useState<ProjectVideoSource | null>(null);
   const [area, setArea] = useState(100);
   const [thankYouName, setThankYouName] = useState<string | null>(null);
   const [contactName, setContactName] = useState("");
@@ -256,7 +266,14 @@ export default function Home() {
           <div className="k-project-grid">
             {projectCards.map((project) => (
               <article className="k-project" key={project.image}>
-                <div className="k-project-photo washed"><img src={project.image} {...imageSize(project.image)} alt={project.title} loading="lazy" decoding="async" /></div>
+                {project.video ? (
+                  <button type="button" className="k-project-photo k-project-video washed" onClick={() => setProjectVideo(project.video ?? null)} aria-label={`Смотреть видео: ${project.title}`}>
+                    <img src={project.image} {...imageSize(project.image)} alt={project.title} loading="lazy" decoding="async" />
+                    <span className="k-project-play" aria-hidden="true"><Play size={22} strokeWidth={ICON_STROKE} fill="currentColor" /></span>
+                  </button>
+                ) : (
+                  <div className="k-project-photo washed"><img src={project.image} {...imageSize(project.image)} alt={project.title} loading="lazy" decoding="async" /></div>
+                )}
                 <div className="k-project-caption"><h3>{project.title}</h3><p>{project.meta}</p></div>
               </article>
             ))}
@@ -298,17 +315,6 @@ export default function Home() {
             </div>
             <p>Для точного расчёта учтём планировку, инженерные системы и уровень отделки.</p>
             <button className="btn btn-primary k-btn-lg k-btn-block" onClick={openLead}>Получить смету за 2 часа<ArrowRight size={18} strokeWidth={ICON_STROKE} /></button>
-          </div>
-        </section>
-
-        <section className="k-section k-container">
-          <div className="k-heading-row">
-            <div><SectionLabel>Отзывы клиентов</SectionLabel><h2>Что говорят <span className="k-accent">клиенты</span><Dot /></h2></div>
-            <div className="k-rating"><b>4.9</b><div><span aria-label="5 из 5">{[1, 2, 3, 4, 5].map((i) => <Star key={i} size={16} fill="currentColor" strokeWidth={0} />)}</span><small>средняя оценка<br />на независимых площадках</small></div></div>
-          </div>
-          <div className="k-quotes">
-            <figure className="k-quote k-quote-warm"><blockquote>«Ремонт совпал с рождением ребёнка, поэтому особенно ценили, что не нужно ничего держать в голове. Прораб присылал отчёты, всё фиксировал и сам предлагал решения.»</blockquote><figcaption><span className="k-avatar">ЕК</span><span><b>Екатерина К.</b><small>Квартира, 112 м² · ЖК «Садовые кварталы»</small></span></figcaption></figure>
-            <figure className="k-quote"><blockquote>«Смета была понятна с первого дня. Когда захотели изменить раскладку плитки, сразу увидели, как это влияет на срок и стоимость. Без недосказанности.»</blockquote><figcaption><span className="k-avatar k-avatar-sage">АМ</span><span><b>Алексей М.</b><small>Апартаменты, 86 м² · Пресня</small></span></figcaption></figure>
           </div>
         </section>
 
@@ -369,6 +375,7 @@ export default function Home() {
 
       <SiteFooter page="home" />
 
+      <ProjectVideoModal video={projectVideo} onClose={() => setProjectVideo(null)} />
       <LeadModal open={leadOpen} onClose={() => setLeadOpen(false)} onSuccess={showThankYou} calculator={calculator} />
       <ThankYouModal name={thankYouName} onClose={() => setThankYouName(null)} />
     </div>
