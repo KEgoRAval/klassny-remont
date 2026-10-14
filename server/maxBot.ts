@@ -1,8 +1,11 @@
 import type { Express, Request, Response } from "express";
+import { escapeHtml, sendTextToTelegram } from "./telegram";
 
 /**
- * MAX messenger bot: answers "Start" and any message with a short greeting and a button
- * that opens the /max mini-app. Without this the bot stays silent after "Start".
+ * MAX messenger bot: answers "Start" with a greeting and a button that opens the /max mini-app.
+ * A text message gets a "Передать менеджеру" button; pressing it shares the user's phone, and
+ * the question with that phone is sent to the operator's Telegram (the button press is the
+ * consent, described in the privacy policy, section #max).
  *
  * Configured from the server environment (deployment/shared/.env):
  *   MAX_BOT_TOKEN       token from business.max.ru → the bot → Интеграция
@@ -44,7 +47,8 @@ export function maxConfig(env: NodeJS.ProcessEnv = process.env): MaxConfig | nul
 
 type Button =
   | { type: "open_app"; text: string; web_app: string }
-  | { type: "link"; text: string; url: string };
+  | { type: "link"; text: string; url: string }
+  | { type: "request_contact"; text: string };
 
 export function replyButtons(config: Pick<MaxConfig, "username" | "origin">): Button[][] {
   const url = `${config.origin}${MINI_APP_PATH}`;
@@ -62,40 +66,158 @@ export const WELCOME_TEXT = [
   "Нажмите кнопку ниже 👇",
 ].join("\n");
 
-export const FOLLOW_UP_TEXT = [
-  "Чтобы мы посчитали ремонт, откройте форму по кнопке ниже — там можно приложить дизайн-проект.",
+export const QUESTION_TEXT = [
+  "Получили ваше сообщение. Чтобы менеджер ответил, нажмите «Передать менеджеру» — мы получим ваш вопрос и номер телефона и перезвоним в рабочее время.",
   "",
-  `Удобнее голосом — позвоните: ${PHONE}.`,
+  "Нажимая кнопку, вы соглашаетесь на обработку имени, телефона и текста сообщения и их передачу оператору через Telegram: krem.moscow/privacy-policy#max",
+  "",
+  "Или сразу посчитайте ремонт по кнопке ниже.",
 ].join("\n");
 
-export function messageBody(text: string, config: Pick<MaxConfig, "username" | "origin">) {
+export const THANKS_TEXT = `Спасибо! Передали ваш вопрос менеджеру — перезвоним в рабочее время. Срочно — звоните: ${PHONE}.`;
+export const FORWARD_FAILED_TEXT = `Не получилось передать сообщение. Пожалуйста, позвоните: ${PHONE}.`;
+
+const CONTACT_BUTTON: Button = { type: "request_contact", text: "Передать менеджеру" };
+
+export function messageBody(text: string, config: Pick<MaxConfig, "username" | "origin">, extra: Button[][] = []) {
   return {
     text,
-    attachments: [{ type: "inline_keyboard", payload: { buttons: replyButtons(config) } }],
+    attachments: [{ type: "inline_keyboard", payload: { buttons: [...extra, ...replyButtons(config)] } }],
   };
 }
 
-type MaxUser = { user_id?: number; is_bot?: boolean };
+type MaxUser = { user_id?: number; is_bot?: boolean; first_name?: string; last_name?: string | null; username?: string | null };
+type MaxAttachment = { type?: string; payload?: { vcf_info?: string | null; max_info?: MaxUser | null } };
 type MaxUpdate = {
   update_type?: string;
   user?: MaxUser;
-  message?: { sender?: MaxUser | null; recipient?: { chat_type?: string } };
+  message?: {
+    sender?: MaxUser | null;
+    recipient?: { chat_type?: string };
+    body?: { text?: string | null; attachments?: MaxAttachment[] | null };
+  };
 };
 
-/** Which reply an update gets, and to whom. Ignores bots and anything outside a private dialog. */
-export function replyFor(update: MaxUpdate): { userId: number; text: string } | null {
+/** Phone from a shared contact's vCard: the first TEL line, digits and a leading + kept. */
+export function phoneFromVcf(vcf: string | null | undefined): string | null {
+  const line = vcf?.split(/\r?\n/).find(row => /^TEL[;:]/i.test(row));
+  const raw = line?.slice(line.lastIndexOf(":") + 1).trim() ?? "";
+  const phone = raw.replace(/[^\d+]/g, "");
+  return phone.replace(/\D/g, "").length >= 10 ? phone : null;
+}
+
+const fullName = (user: MaxUser) => [user.first_name, user.last_name].filter(Boolean).join(" ").trim() || "Без имени";
+
+export function formatQuestion(user: MaxUser, phone: string, texts: string[]): string {
+  const handle = user.username ? ` (@${escapeHtml(user.username)})` : "";
+  const body = texts.length
+    ? escapeHtml(texts.join("\n")).slice(0, 3000)
+    : "<i>без текста — просит перезвонить</i>";
+  return [
+    "💬 <b>Вопрос из бота MAX</b>",
+    "",
+    `<b>Клиент:</b> ${escapeHtml(fullName(user))}${handle}`,
+    `<b>Телефон:</b> ${escapeHtml(phone)}`,
+    "",
+    "<b>Сообщение:</b>",
+    body,
+  ].join("\n");
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HINT_EVERY_MS = 10 * 60 * 1000;
+const MAX_TEXTS = 5;
+const MAX_TEXT_LENGTH = 1000;
+const MAX_USERS = 5000;
+
+/** Recent messages per user, waiting for the user to share a phone. Kept in memory for a day. */
+export class Inbox {
+  private entries = new Map<number, { texts: string[]; updatedAt: number; hintAt: number }>();
+  constructor(private now: () => number = Date.now) {}
+
+  private entry(userId: number) {
+    const now = this.now();
+    this.entries.forEach((item, id) => { if (now - item.updatedAt > DAY_MS) this.entries.delete(id); });
+    let item = this.entries.get(userId);
+    if (!item) {
+      if (this.entries.size >= MAX_USERS) this.entries.delete(this.entries.keys().next().value!);
+      item = { texts: [], updatedAt: now, hintAt: 0 };
+      this.entries.set(userId, item);
+    }
+    item.updatedAt = now;
+    return item;
+  }
+
+  /** Stores a message; true when the user should get the "Передать менеджеру" hint now. */
+  add(userId: number, text: string): boolean {
+    const item = this.entry(userId);
+    item.texts = [...item.texts, text.slice(0, MAX_TEXT_LENGTH)].slice(-MAX_TEXTS);
+    if (this.now() - item.hintAt < HINT_EVERY_MS) return false;
+    item.hintAt = this.now();
+    return true;
+  }
+
+  texts(userId: number): string[] {
+    return this.entries.get(userId)?.texts ?? [];
+  }
+
+  clear(userId: number) {
+    this.entries.delete(userId);
+  }
+}
+
+type Deps = {
+  reply: (userId: number, text: string, extra?: Button[][]) => Promise<void>;
+  toTelegram: (html: string) => Promise<void>;
+  inbox: Inbox;
+};
+
+const ATTACHMENT_LABELS: Record<string, string> = { image: "фото", video: "видео", audio: "аудио", file: "файл", sticker: "стикер", location: "геопозиция" };
+
+/** Reacts to one update. Ignores bots and anything outside a private dialog. */
+export async function handleUpdate(update: MaxUpdate, deps: Deps): Promise<void> {
   if (update.update_type === "bot_started") {
     const user = update.user;
-    if (!user?.user_id || user.is_bot) return null;
-    return { userId: user.user_id, text: WELCOME_TEXT };
+    if (!user?.user_id || user.is_bot) return;
+    await deps.reply(user.user_id, WELCOME_TEXT);
+    return;
   }
-  if (update.update_type === "message_created") {
-    const sender = update.message?.sender;
-    if (!sender?.user_id || sender.is_bot) return null;
-    if (update.message?.recipient?.chat_type && update.message.recipient.chat_type !== "dialog") return null;
-    return { userId: sender.user_id, text: FOLLOW_UP_TEXT };
+  if (update.update_type !== "message_created") return;
+  const sender = update.message?.sender;
+  if (!sender?.user_id || sender.is_bot) return;
+  const chatType = update.message?.recipient?.chat_type;
+  if (chatType && chatType !== "dialog") return;
+  const userId = sender.user_id;
+  const attachments = update.message?.body?.attachments ?? [];
+
+  const contact = attachments.find(item => item.type === "contact");
+  if (contact) {
+    const owner = contact.payload?.max_info?.user_id;
+    const phone = phoneFromVcf(contact.payload?.vcf_info);
+    // Only the user's own contact, shared with the button, counts as their phone.
+    if (!phone || (owner && owner !== userId)) {
+      await deps.reply(userId, `Не удалось получить номер. Нажмите «Передать менеджеру» ещё раз или позвоните: ${PHONE}.`, [[CONTACT_BUTTON]]);
+      return;
+    }
+    try {
+      await deps.toTelegram(formatQuestion(sender, phone, deps.inbox.texts(userId)));
+    } catch (error) {
+      console.error("[MAX] question not delivered to Telegram:", error instanceof Error ? error.message : error);
+      await deps.reply(userId, FORWARD_FAILED_TEXT);
+      return;
+    }
+    deps.inbox.clear(userId);
+    await deps.reply(userId, THANKS_TEXT);
+    return;
   }
-  return null;
+
+  const text = update.message?.body?.text?.trim();
+  const extras = attachments
+    .filter(item => item.type && item.type !== "inline_keyboard")
+    .map(item => `[${ATTACHMENT_LABELS[item.type!] ?? "вложение"}]`);
+  const note = [text, ...extras].filter(Boolean).join(" ");
+  if (!note) return;
+  if (deps.inbox.add(userId, note)) await deps.reply(userId, QUESTION_TEXT, [[CONTACT_BUTTON]]);
 }
 
 async function callMax(config: MaxConfig, method: "GET" | "POST", path: string, body: unknown, fetcher: typeof fetch) {
@@ -112,8 +234,8 @@ async function callMax(config: MaxConfig, method: "GET" | "POST", path: string, 
   return response.json().catch(() => ({}));
 }
 
-export async function sendReply(config: MaxConfig, userId: number, text: string, fetcher: typeof fetch = fetch) {
-  await callMax(config, "POST", `/messages?user_id=${encodeURIComponent(String(userId))}`, messageBody(text, config), fetcher);
+export async function sendReply(config: MaxConfig, userId: number, text: string, fetcher: typeof fetch = fetch, extra: Button[][] = []) {
+  await callMax(config, "POST", `/messages?user_id=${encodeURIComponent(String(userId))}`, messageBody(text, config, extra), fetcher);
 }
 
 const status: { configured: boolean; subscribed: boolean; lastError: string | null; lastReplyAt: string | null } = {
@@ -143,9 +265,15 @@ export async function subscribeWebhook(config: MaxConfig, fetcher: typeof fetch 
   }
 }
 
-export function registerMaxBotRoutes(app: Express, env: NodeJS.ProcessEnv = process.env, fetcher: typeof fetch = fetch) {
+export function registerMaxBotRoutes(
+  app: Express,
+  env: NodeJS.ProcessEnv = process.env,
+  fetcher: typeof fetch = fetch,
+  toTelegram: (html: string) => Promise<void> = html => sendTextToTelegram(html),
+) {
   const config = maxConfig(env);
   status.configured = Boolean(config);
+  const inbox = new Inbox();
 
   app.get("/api/max/status", (_req: Request, res: Response) => {
     res.set("Cache-Control", "no-store").json({ ...status, miniAppButton: Boolean(config?.username) });
@@ -158,14 +286,18 @@ export function registerMaxBotRoutes(app: Express, env: NodeJS.ProcessEnv = proc
     }
     // MAX waits for a quick 200; the reply is sent afterwards.
     res.status(200).json({ ok: true });
-    const reply = replyFor(req.body as MaxUpdate);
-    if (!reply) return;
-    sendReply(config, reply.userId, reply.text, fetcher)
-      .then(() => { status.lastReplyAt = new Date().toISOString(); })
-      .catch(error => {
-        status.lastError = scrub(String(error instanceof Error ? error.message : error), config);
-        console.error("[MAX] reply failed:", status.lastError);
-      });
+    const deps: Deps = {
+      inbox,
+      toTelegram,
+      reply: async (userId, text, extra) => {
+        await sendReply(config, userId, text, fetcher, extra);
+        status.lastReplyAt = new Date().toISOString();
+      },
+    };
+    handleUpdate(req.body as MaxUpdate, deps).catch(error => {
+      status.lastError = scrub(String(error instanceof Error ? error.message : error), config);
+      console.error("[MAX] update failed:", status.lastError);
+    });
   });
 
   return config;
