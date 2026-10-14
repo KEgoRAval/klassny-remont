@@ -60,3 +60,17 @@ sudo systemctl restart klassny-remont
 Уведомление о cookies — именно уведомление со ссылкой на политику, а не выбор: оно не включает и не выключает Метрику. Сервис Umami подключается после нажатия «Понятно».
 
 В интерфейсе Метрики нужно создать цели типа «JavaScript‑событие» с такими идентификаторами: `lead` (любая отправленная форма — её использовать в Директе), `lead_calculator`, `lead_contact`, `lead_blog`, `click_phone`, `click_telegram`, `click_whatsapp`. Переходы внутри сайта без перезагрузки страницы отправляются в Метрику как просмотры.
+
+
+## Автодеплой из GitHub
+
+Каждый мерж в `main` выкатывается workflow `.github/workflows/deploy.yml`: проверка типов на GitHub, затем SSH на сервер по ключу, который умеет только одно — запустить `/usr/local/sbin/klassny-ci-release` (это `deployment/ci-release.sh`). Скрипт собирает `main` от имени `kegora`, переключает `current`, перезапускает сервис и при неответе откатывается на предыдущий релиз. Конфиг Nginx автодеплой не трогает — его меняют ручным `release-from-github.sh`.
+
+Разовая настройка (от `kegora` на сервере, sudo спросит пароль):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/KEgoRAval/klassny-remont/main/deployment/setup-ci-deploy.sh -o /tmp/setup-ci.sh
+bash /tmp/setup-ci.sh
+```
+
+Скрипт печатает значения секретов `DEPLOY_SSH_KEY` и `DEPLOY_KNOWN_HOSTS` для GitHub → Settings → Secrets and variables → Actions. Изменения в `ci-release.sh` вступают в силу только после повторного запуска `setup-ci-deploy.sh`. Ручной запуск деплоя: GitHub → Actions → Deploy → Run workflow.
