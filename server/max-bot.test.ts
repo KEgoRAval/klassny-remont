@@ -1,7 +1,7 @@
 import express from "express";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { FOLLOW_UP_TEXT, MAX_SECRET_HEADER, WELCOME_TEXT, maxConfig, registerMaxBotRoutes, replyButtons, replyFor, resetMaxStatus, subscribeWebhook } from "./maxBot";
+import { FORWARD_FAILED_TEXT, Inbox, MAX_SECRET_HEADER, QUESTION_TEXT, THANKS_TEXT, WELCOME_TEXT, handleUpdate, maxConfig, phoneFromVcf, registerMaxBotRoutes, replyButtons, resetMaxStatus, subscribeWebhook } from "./maxBot";
 
 const env = {
   MAX_BOT_TOKEN: "tok_123",
@@ -12,16 +12,86 @@ const env = {
 
 type Call = { url: string; init: RequestInit };
 
+function harness(now = { t: 1_000_000 }) {
+  const replies: { userId: number; text: string; buttons?: unknown }[] = [];
+  const forwarded: string[] = [];
+  let telegramFails = false;
+  const deps = {
+    inbox: new Inbox(() => now.t),
+    reply: async (userId: number, text: string, extra?: unknown) => { replies.push({ userId, text, buttons: extra }); },
+    toTelegram: async (html: string) => { if (telegramFails) throw new Error("down"); forwarded.push(html); },
+  };
+  return { deps, replies, forwarded, now, failTelegram: () => { telegramFails = true; } };
+}
+
+const userMessage = (text: string, extra: Record<string, unknown> = {}) => ({
+  update_type: "message_created",
+  message: { sender: { user_id: 8, first_name: "Анна", last_name: "К.", username: "anna_k", is_bot: false }, recipient: { chat_type: "dialog" }, body: { text, ...extra } },
+});
+const contactMessage = (vcf: string, owner = 8) => userMessage("", { attachments: [{ type: "contact", payload: { vcf_info: vcf, max_info: { user_id: owner } } }] });
+const VCF = "BEGIN:VCARD\nVERSION:3.0\nFN:Анна К.\nTEL;TYPE=cell:+7 (916) 123-45-67\nEND:VCARD";
+
 describe("MAX bot replies", () => {
-  it("greets on Start and answers a user's message with the mini-app button", () => {
-    expect(replyFor({ update_type: "bot_started", user: { user_id: 7, is_bot: false } })).toEqual({ userId: 7, text: WELCOME_TEXT });
-    expect(replyFor({ update_type: "message_created", message: { sender: { user_id: 8, is_bot: false }, recipient: { chat_type: "dialog" } } })).toEqual({ userId: 8, text: FOLLOW_UP_TEXT });
+  it("greets on Start", async () => {
+    const h = harness();
+    await handleUpdate({ update_type: "bot_started", user: { user_id: 7, is_bot: false } }, h.deps);
+    expect(h.replies).toEqual([{ userId: 7, text: WELCOME_TEXT, buttons: undefined }]);
   });
 
-  it("stays quiet for bots, group chats and other updates", () => {
-    expect(replyFor({ update_type: "bot_started", user: { user_id: 7, is_bot: true } })).toBeNull();
-    expect(replyFor({ update_type: "message_created", message: { sender: { user_id: 8 }, recipient: { chat_type: "chat" } } })).toBeNull();
-    expect(replyFor({ update_type: "message_removed" })).toBeNull();
+  it("offers to pass a question to the manager, once per 10 minutes", async () => {
+    const h = harness();
+    await handleUpdate(userMessage("Сколько стоит санузел 5 м²?"), h.deps);
+    await handleUpdate(userMessage("И сроки?"), h.deps);
+    expect(h.replies).toHaveLength(1);
+    expect(h.replies[0].text).toBe(QUESTION_TEXT);
+    expect(JSON.stringify(h.replies[0].buttons)).toContain("request_contact");
+    h.now.t += 11 * 60 * 1000;
+    await handleUpdate(userMessage("Алло?"), h.deps);
+    expect(h.replies).toHaveLength(2);
+  });
+
+  it("sends the question with the shared phone to Telegram and thanks the user", async () => {
+    const h = harness();
+    await handleUpdate(userMessage("Сколько стоит санузел 5 м²?"), h.deps);
+    await handleUpdate(userMessage("<b>и сроки</b>"), h.deps);
+    await handleUpdate(contactMessage(VCF), h.deps);
+    expect(h.forwarded).toHaveLength(1);
+    expect(h.forwarded[0]).toContain("Вопрос из бота MAX");
+    expect(h.forwarded[0]).toContain("Анна К. (@anna_k)");
+    expect(h.forwarded[0]).toContain("+79161234567");
+    expect(h.forwarded[0]).toContain("Сколько стоит санузел 5 м²?\n&lt;b&gt;и сроки&lt;/b&gt;");
+    expect(h.replies.at(-1)?.text).toBe(THANKS_TEXT);
+    // Sent once; a second contact without new messages is a plain call-back request.
+    await handleUpdate(contactMessage(VCF), h.deps);
+    expect(h.forwarded[1]).toContain("без текста");
+  });
+
+  it("does not forward someone else's contact", async () => {
+    const h = harness();
+    await handleUpdate(contactMessage(VCF, 99), h.deps);
+    expect(h.forwarded).toHaveLength(0);
+  });
+
+  it("keeps the question and tells the user to call when Telegram is down", async () => {
+    const h = harness();
+    h.failTelegram();
+    await handleUpdate(userMessage("Вопрос"), h.deps);
+    await handleUpdate(contactMessage(VCF), h.deps);
+    expect(h.replies.at(-1)?.text).toBe(FORWARD_FAILED_TEXT);
+    expect(h.deps.inbox.texts(8)).toEqual(["Вопрос"]);
+  });
+
+  it("stays quiet for bots and group chats", async () => {
+    const h = harness();
+    await handleUpdate({ update_type: "bot_started", user: { user_id: 7, is_bot: true } }, h.deps);
+    await handleUpdate({ update_type: "message_created", message: { sender: { user_id: 8 }, recipient: { chat_type: "chat" }, body: { text: "hi" } } }, h.deps);
+    expect(h.replies).toHaveLength(0);
+  });
+
+  it("reads the phone from a vCard", () => {
+    expect(phoneFromVcf(VCF)).toBe("+79161234567");
+    expect(phoneFromVcf("TEL:89161234567")).toBe("89161234567");
+    expect(phoneFromVcf("FN:x")).toBeNull();
   });
 
   it("opens the mini-app inside MAX and keeps a browser link", () => {
@@ -48,7 +118,7 @@ describe("MAX webhook endpoint", () => {
   }) as unknown as typeof fetch;
   const app = express();
   app.use(express.json());
-  registerMaxBotRoutes(app, env, fetcher);
+  registerMaxBotRoutes(app, env, fetcher, async () => {});
   let origin = "";
   let close = () => {};
 

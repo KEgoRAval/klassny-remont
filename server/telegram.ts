@@ -156,3 +156,19 @@ export async function sendLeadToTelegram(
   await callTelegram(fetcher, config.token, "sendDocument", documentForm(config.chatId, lead, options.attachment), TELEGRAM_UPLOAD_TIMEOUT_MS);
   await callTelegram(fetcher, config.token, "sendMessage", messageBody(), TELEGRAM_TIMEOUT_MS);
 }
+
+/** Sends a ready HTML message to the operator's chat; used for questions from the MAX bot. */
+export async function sendTextToTelegram(
+  html: string,
+  fetcher: typeof fetch = fetch,
+  config = {
+    token: process.env.TELEGRAM_BOT_TOKEN ?? "",
+    chatId: process.env.TELEGRAM_CHAT_ID ?? "",
+  },
+): Promise<void> {
+  if (!config.token || !config.chatId) throw new Error("Telegram is not configured");
+  const body = JSON.stringify({ chat_id: config.chatId, text: html, parse_mode: "HTML", disable_web_page_preview: true });
+  await callTelegram(fetcher, config.token, "sendMessage", body, TELEGRAM_TIMEOUT_MS);
+}
+
+export { escapeHtml };
