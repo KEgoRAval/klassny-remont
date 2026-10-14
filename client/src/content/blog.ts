@@ -1,4 +1,5 @@
 import { siteImages } from "./media";
+import { organizationRef } from "./organization";
 
 export type BlogSource = { label: string; url: string };
 
@@ -965,8 +966,8 @@ export function blogArticleJsonLd(post: BlogPost) {
         datePublished: post.publishedAt,
         dateModified: post.modifiedAt,
         mainEntityOfPage: { "@type": "WebPage", "@id": post.path },
-        author: { "@type": "Organization", name: "Классный Ремонт", url: "/" },
-        publisher: { "@type": "Organization", name: "Классный Ремонт", url: "/" },
+        author: organizationRef,
+        publisher: organizationRef,
       },
       {
         "@type": "BreadcrumbList",
@@ -993,5 +994,5 @@ export const blogIndexJsonLd = {
   "@type": "Blog",
   name: "Блог Классного Ремонта",
   url: "/blog",
-  publisher: { "@type": "Organization", name: "Классный Ремонт", url: "/" },
+  publisher: organizationRef,
 };

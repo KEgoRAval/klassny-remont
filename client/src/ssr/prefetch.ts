@@ -1,5 +1,6 @@
 import { blogArticleJsonLd, blogIndexJsonLd, getBlogPostFromPath } from "@/content/blog";
 import { ogImageFor, siteImages } from "@/content/media";
+import { ORGANIZATION_ID, organizationLogo, websiteJsonLd } from "@/content/organization";
 
 export type HeadMeta = {
   title: string;
@@ -41,11 +42,13 @@ export function prefetchForPath(url: string): HeadMeta {
         "@graph": [
           {
             "@type": ["HomeAndConstructionBusiness", "LocalBusiness"],
-            "@id": "#organization",
+            "@id": ORGANIZATION_ID,
             name: "Классный Ремонт",
             legalName: "ИП Бережной Егор Юрьевич",
             description: "Ремонт квартир бизнес- и премиум-класса под ключ в Москве: от замера и сметы до приёмки готового объекта.",
             url: "/",
+            logo: organizationLogo,
+            image: ogImageFor(siteImages.hero.src),
             areaServed: [{ "@type": "City", name: "Москва" }, { "@type": "AdministrativeArea", name: "Московская область" }],
             priceRange: "от 40 000 ₽/м² за работы",
             telephone: "+7 977 948-06-72",
@@ -56,11 +59,11 @@ export function prefetchForPath(url: string): HeadMeta {
               { "@type": "Offer", itemOffered: { "@type": "Service", name: "Инженерные системы" } },
               { "@type": "Offer", itemOffered: { "@type": "Service", name: "Черновая отделка" } },
             ] },
-            aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "37" },
           },
+          websiteJsonLd,
           {
             "@type": "FAQPage",
-            "@id": "#faq",
+            "@id": "/#faq",
             mainEntity: [
               { "@type": "Question", name: "Сколько стоит ремонт квартиры в Москве?", acceptedAnswer: { "@type": "Answer", text: "Стоимость работ начинается от 40 000 ₽ за м². Точный бюджет зависит от площади, состояния квартиры, инженерных решений и состава отделки. Материалы, мебель и декор рассчитываются отдельными строками." } },
               { "@type": "Question", name: "Что входит в ремонт под ключ?", acceptedAnswer: { "@type": "Answer", text: "В ремонт под ключ входят организация работ, черновая и чистовая отделка, реализация инженерных систем по проекту, контроль критичных этапов, фотоотчёты и подготовка объекта к приёмке." } },
