@@ -38,9 +38,17 @@ const veryVideo: ProjectVideoSource = {
   height: 956,
 };
 
+const everVideo: ProjectVideoSource = {
+  src: "/media/video/ever-walkthrough.mp4",
+  poster: images.everLiving,
+  title: "ЖК Ever — проход по квартире",
+  width: 720,
+  height: 1206,
+};
+
 const projectCards: { image: string; title: string; meta: string; video?: ProjectVideoSource }[] = [
   { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная", video: veryVideo },
-  { image: images.everLiving, title: "ЖК Ever", meta: "Кухня-гостиная" },
+  { image: images.everLiving, title: "ЖК Ever", meta: "Кухня-гостиная", video: everVideo },
   { image: images.veryBedroom, title: "ЖК Остров", meta: "Спальня" },
   { image: images.everEntry, title: "ЖК Level", meta: "Прихожая" },
 ];

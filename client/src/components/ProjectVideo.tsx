@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { X } from "lucide-react";
 import { ICON_STROKE } from "@/components/KremChrome";
 
@@ -19,7 +19,7 @@ export function ProjectVideoModal({ video, onClose }: { video: ProjectVideoSourc
   if (!video) return null;
   return (
     <div className="k-backdrop" role="dialog" aria-modal="true" aria-label={video.title} onMouseDown={onClose}>
-      <div className="k-video-modal" onMouseDown={(event) => event.stopPropagation()}>
+      <div className="k-video-modal" style={{ "--k-video-w": video.width, "--k-video-h": video.height } as CSSProperties} onMouseDown={(event) => event.stopPropagation()}>
         <button ref={closeRef} className="k-modal-close" onClick={onClose} aria-label="Закрыть видео"><X size={20} strokeWidth={ICON_STROKE} /></button>
         <video src={video.src} poster={video.poster} width={video.width} height={video.height} autoPlay controls playsInline preload="auto" onEnded={onClose} />
       </div>
