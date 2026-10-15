@@ -8,7 +8,8 @@ import { registerLegacyStorageRedirects } from "./staticAssets";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { registerSeoRoutes } from "./seo";
-import { estimatesPath, startLeadRetryLoop } from "../leadService";
+import { estimatesPath, maxChannelsPath, startLeadRetryLoop } from "../leadService";
+import { ChannelStore } from "../maxChannel";
 import { startEstimateWorker } from "../estimate/jobs";
 import { registerMaxBotRoutes, startMaxBot } from "../maxBot";
 import { serveStatic, setupVite } from "./vite";
@@ -41,7 +42,7 @@ async function startServer() {
   registerLegacyStorageRedirects(app);
   registerOAuthRoutes(app);
   registerSeoRoutes(app);
-  const maxBot = registerMaxBotRoutes(app);
+  const maxBot = registerMaxBotRoutes(app, process.env, fetch, undefined, new ChannelStore(maxChannelsPath()));
   // tRPC API
   app.use(
     "/api/trpc",

@@ -15,6 +15,9 @@ const RETRY_INTERVAL_MS = 2 * 60 * 1000;
 export const leadJournalPath = () =>
   process.env.LEADS_JOURNAL_PATH || path.resolve(process.cwd(), "data", "leads.jsonl");
 
+/** Channels the MAX bot administers, next to the journal so they survive releases. */
+export const maxChannelsPath = () => path.join(path.dirname(leadJournalPath()), "max-channels.json");
+
 /** Automatic estimate jobs, next to the journal so they survive releases. */
 export const estimatesPath = () => path.join(path.dirname(leadJournalPath()), "estimates");
 
