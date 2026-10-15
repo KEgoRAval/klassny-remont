@@ -198,7 +198,7 @@ describe("MAX webhook subscription", () => {
     expect(calls[0].url).toBe("https://platform-api2.max.ru/subscriptions");
     expect(JSON.parse(String(calls[0].init.body))).toEqual({
       url: "https://krem.moscow/api/max/webhook",
-      update_types: ["bot_started", "message_created"],
+      update_types: ["bot_started", "message_created", "bot_added", "bot_removed"],
       secret: "sec_456",
     });
   });

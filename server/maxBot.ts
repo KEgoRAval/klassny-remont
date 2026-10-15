@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { escapeHtml, sendTextToTelegram } from "./telegram";
+import { ChannelStore, POST_HELP, parsePostCommand, reusableMedia } from "./maxChannel";
 
 /**
  * MAX messenger bot: answers "Start" with a greeting and a button that opens the /max mini-app.
@@ -100,10 +101,12 @@ export function messageBody(text: string, config: Pick<MaxConfig, "username" | "
 }
 
 type MaxUser = { user_id?: number; is_bot?: boolean; first_name?: string; last_name?: string | null; username?: string | null };
-type MaxAttachment = { type?: string; payload?: { vcf_info?: string | null; max_info?: MaxUser | null } };
+type MaxAttachment = { type?: string; payload?: { vcf_info?: string | null; max_info?: MaxUser | null; token?: string } };
 type MaxUpdate = {
   update_type?: string;
   user?: MaxUser;
+  chat_id?: number;
+  is_channel?: boolean;
   message?: {
     sender?: MaxUser | null;
     recipient?: { chat_type?: string };
@@ -183,12 +186,28 @@ type Deps = {
   reply: (userId: number, text: string, extra?: Button[][]) => Promise<void>;
   toTelegram: (html: string) => Promise<void>;
   inbox: Inbox;
+  channels?: ChannelStore;
+  /** Publishes a post to a channel; returns the new message id when MAX gives one. */
+  publish?: (chatId: number, text: string, media: { type: "image" | "video"; payload: { token: string } }[], pin: boolean) => Promise<void>;
+  channelTitle?: (chatId: number) => Promise<string | undefined>;
+  now?: () => number;
 };
 
 const ATTACHMENT_LABELS: Record<string, string> = { image: "фото", video: "видео", audio: "аудио", file: "файл", sticker: "стикер", location: "геопозиция" };
 
 /** Reacts to one update. Ignores bots and anything outside a private dialog. */
 export async function handleUpdate(update: MaxUpdate, deps: Deps): Promise<void> {
+  if (update.update_type === "bot_added" && update.is_channel && update.chat_id && update.user?.user_id && deps.channels) {
+    const title = await deps.channelTitle?.(update.chat_id).catch(() => undefined);
+    deps.channels.add({ chatId: update.chat_id, ownerUserId: update.user.user_id, title, addedAt: new Date(deps.now?.() ?? Date.now()).toISOString() });
+    await deps.toTelegram(`📣 Бот MAX добавлен администратором канала${title ? ` «${escapeHtml(title)}»` : ""}. Публиковать посты с кнопкой может ${escapeHtml(fullName(update.user))} — через сообщение боту с /post.`).catch(() => {});
+    await deps.reply(update.user.user_id, POST_HELP).catch(() => {});
+    return;
+  }
+  if (update.update_type === "bot_removed" && update.chat_id && deps.channels) {
+    deps.channels.remove(update.chat_id);
+    return;
+  }
   if (update.update_type === "bot_started") {
     const user = update.user;
     if (!user?.user_id || user.is_bot) return;
@@ -225,6 +244,27 @@ export async function handleUpdate(update: MaxUpdate, deps: Deps): Promise<void>
   }
 
   const text = update.message?.body?.text?.trim();
+  const post = parsePostCommand(text);
+  if (post && deps.channels && deps.publish) {
+    const owned = deps.channels.ownedBy(userId);
+    if (owned.length) {
+      const media = reusableMedia(attachments);
+      if (!post.text && !media.length) {
+        await deps.reply(userId, POST_HELP);
+        return;
+      }
+      for (const channel of owned) {
+        try {
+          await deps.publish(channel.chatId, post.text, media, post.pin);
+        } catch (error) {
+          await deps.reply(userId, `Не получилось опубликовать в канал${channel.title ? ` «${channel.title}»` : ""}: ${error instanceof Error ? error.message.slice(0, 200) : "ошибка"}`);
+          return;
+        }
+      }
+      await deps.reply(userId, `Опубликовано${post.pin ? " и закреплено" : ""} ✅`);
+      return;
+    }
+  }
   const command = text?.match(/^\/([a-z_]+)(?:@\S+)?$/i)?.[1]?.toLowerCase();
   if (command) {
     if (command === "manager") {
@@ -243,7 +283,7 @@ export async function handleUpdate(update: MaxUpdate, deps: Deps): Promise<void>
   if (deps.inbox.add(userId, note)) await deps.reply(userId, QUESTION_TEXT, [[CONTACT_BUTTON]]);
 }
 
-async function callMax(config: MaxConfig, method: "GET" | "POST" | "PATCH", path: string, body: unknown, fetcher: typeof fetch) {
+async function callMax(config: MaxConfig, method: "GET" | "POST" | "PATCH" | "PUT", path: string, body: unknown, fetcher: typeof fetch) {
   const response = await fetcher(`${config.apiBase}${path}`, {
     method,
     headers: { Authorization: config.token, "Content-Type": "application/json" },
@@ -309,7 +349,7 @@ export async function subscribeWebhook(config: MaxConfig, fetcher: typeof fetch 
   try {
     await callMax(config, "POST", "/subscriptions", {
       url: `${config.origin}${MAX_WEBHOOK_PATH}`,
-      update_types: ["bot_started", "message_created"],
+      update_types: ["bot_started", "message_created", "bot_added", "bot_removed"],
       secret: config.secret,
     }, fetcher);
     status.subscribed = true;
@@ -327,13 +367,14 @@ export function registerMaxBotRoutes(
   env: NodeJS.ProcessEnv = process.env,
   fetcher: typeof fetch = fetch,
   toTelegram: (html: string) => Promise<void> = html => sendTextToTelegram(html),
+  channels?: ChannelStore,
 ) {
   const config = maxConfig(env);
   status.configured = Boolean(config);
   const inbox = new Inbox();
 
   app.get("/api/max/status", (_req: Request, res: Response) => {
-    res.set("Cache-Control", "no-store").json({ ...status, miniAppButton: Boolean(config?.username) });
+    res.set("Cache-Control", "no-store").json({ ...status, miniAppButton: Boolean(config?.username), channels: channels?.list().length ?? 0 });
   });
 
   app.post(MAX_WEBHOOK_PATH, (req: Request, res: Response) => {
@@ -346,6 +387,9 @@ export function registerMaxBotRoutes(
     const deps: Deps = {
       inbox,
       toTelegram,
+      channels,
+      publish: (chatId, text, media, pin) => publishToChannel(config, chatId, text, media, pin, fetcher),
+      channelTitle: async chatId => ((await callMax(config, "GET", `/chats/${chatId}`, undefined, fetcher)) as { title?: string }).title,
       reply: async (userId, text, extra) => {
         await sendReply(config, userId, text, fetcher, extra);
         status.lastReplyAt = new Date().toISOString();
@@ -358,6 +402,45 @@ export function registerMaxBotRoutes(
   });
 
   return config;
+}
+
+/**
+ * Posts to a channel with the mini-app button under it. MAX may refuse an open_app button in a
+ * channel; the post then goes with a plain link button. A fresh video may need a moment.
+ */
+export async function publishToChannel(
+  config: MaxConfig,
+  chatId: number,
+  text: string,
+  media: { type: "image" | "video"; payload: { token: string } }[],
+  pin: boolean,
+  fetcher: typeof fetch = fetch,
+  wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
+): Promise<void> {
+  const link = `${config.origin}/max?utm_source=max_channel`;
+  const keyboards: Button[][][] = config.username
+    ? [[[{ type: "open_app", text: "Рассчитать ремонт", web_app: config.username }]], [[{ type: "link", text: "Рассчитать ремонт", url: link }]]]
+    : [[[{ type: "link", text: "Рассчитать ремонт", url: link }]]];
+  let lastError: unknown;
+  for (const buttons of keyboards) {
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      try {
+        const result = (await callMax(config, "POST", `/messages?chat_id=${encodeURIComponent(String(chatId))}`, {
+          text: text || null,
+          attachments: [...media, { type: "inline_keyboard", payload: { buttons } }],
+        }, fetcher)) as { message?: { body?: { mid?: string } } };
+        const mid = result.message?.body?.mid;
+        if (pin && mid) await callMax(config, "PUT", `/chats/${chatId}/pin`, { message_id: mid, notify: false }, fetcher);
+        return;
+      } catch (error) {
+        lastError = error;
+        const notReady = error instanceof Error && error.message.includes("attachment.not.ready");
+        if (!notReady) break;
+        await wait(2_000 * attempt);
+      }
+    }
+  }
+  throw lastError instanceof Error ? new Error(scrub(lastError.message, config)) : new Error("публикация не удалась");
 }
 
 /** Called once the server listens: the webhook URL must already answer when MAX checks it. */
