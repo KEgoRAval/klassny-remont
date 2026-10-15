@@ -70,11 +70,11 @@ describe("lead form feedback", () => {
     expect(chrome).toContain("2011448980");
   });
 
-  it("presents four individual projects without status or visualization labels", () => {
+  it("presents three individual projects without status or visualization labels", () => {
     expect(source).toContain("ЖК Very");
     expect(source).toContain("ЖК Ever");
     expect(source).toContain("ЖК Остров");
-    expect(source).toContain("ЖК Level");
+    expect(source).not.toContain("title: \"ЖК Level\"");
     expect(source).not.toContain("Проект в работе");
     expect(source).not.toContain("Интерьерная визуализация");
     expect(source).not.toContain("интерьерные визуализации");
@@ -93,7 +93,7 @@ describe("lead form feedback", () => {
     expect(source).not.toContain("key={project.title}");
   });
 
-  it("uses a single four-item portfolio data set", () => {
+  it("uses a single three-item portfolio data set", () => {
     expect(source).toContain("const projectCards");
     expect(source).not.toContain("veryProjectCards");
     expect(source).not.toContain("everProjectCards");
@@ -103,8 +103,6 @@ describe("lead form feedback", () => {
     expect(mediaSource).toContain("/media/ever-enhanced-bedroom_5f368637.webp");
     expect(source).toContain("siteImages.veryBedroom.src");
     expect(mediaSource).toContain("/media/very-enhanced-bedroom_262c2040.webp");
-    expect(source).toContain("siteImages.everEntry.src");
-    expect(mediaSource).toContain("/media/ever-enhanced-entry_054ed219.webp");
   });
 
   it("provides direct local answers and matching FAQ schema for AI search", () => {

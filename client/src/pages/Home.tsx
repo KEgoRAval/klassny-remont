@@ -25,7 +25,6 @@ const images = {
   veryBedroom: siteImages.veryBedroom.src,
   veryBathroom: siteImages.veryBathroom.src,
   everLiving: siteImages.everLiving.src,
-  everEntry: siteImages.everEntry.src,
   everBedroom: siteImages.everBedroom.src,
   everShower: siteImages.everShower.src,
 };
@@ -50,7 +49,6 @@ const projectCards: { image: string; title: string; meta: string; video?: Projec
   { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная", video: veryVideo },
   { image: images.everLiving, title: "ЖК Ever", meta: "Кухня-гостиная", video: everVideo },
   { image: images.veryBedroom, title: "ЖК Остров", meta: "Спальня" },
-  { image: images.everEntry, title: "ЖК Level", meta: "Прихожая" },
 ];
 
 const steps = [
