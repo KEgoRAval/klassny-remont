@@ -237,7 +237,7 @@ export default function Home() {
             </div>
             <div className="k-hero-stats">
               <div><b>12</b><span>лет создаём интерьеры<br />для требовательных клиентов</span></div>
-              <div><b>64</b><span>реализованных объекта<br />в Москве и области</span></div>
+              <div><b>100+</b><span>отремонтированных квартир<br />в Москве и области</span></div>
             </div>
           </div>
           <div className="k-hero-media">
