@@ -188,7 +188,7 @@ type Deps = {
   inbox: Inbox;
   channels?: ChannelStore;
   /** Publishes a post to a channel; returns the new message id when MAX gives one. */
-  publish?: (chatId: number, text: string, media: { type: "image" | "video"; payload: { token: string } }[], pin: boolean) => Promise<void>;
+  publish?: (chatId: number, text: string, media: { type: "image" | "video"; payload: { token: string } }[], pin: boolean) => Promise<PublishResult>;
   channelTitle?: (chatId: number) => Promise<string | undefined>;
   now?: () => number;
 };
@@ -254,14 +254,20 @@ export async function handleUpdate(update: MaxUpdate, deps: Deps): Promise<void>
         return;
       }
       for (const channel of owned) {
+        const name = channel.title ? ` «${channel.title}»` : "";
+        let result: PublishResult;
         try {
-          await deps.publish(channel.chatId, post.text, media, post.pin);
+          result = await deps.publish(channel.chatId, post.text, media, post.pin);
         } catch (error) {
-          await deps.reply(userId, `Не получилось опубликовать в канал${channel.title ? ` «${channel.title}»` : ""}: ${error instanceof Error ? error.message.slice(0, 200) : "ошибка"}`);
+          await deps.reply(userId, `Не получилось опубликовать в канал${name}: ${error instanceof Error ? error.message.slice(0, 200) : "ошибка"}`);
           return;
         }
+        if (post.pin && !result.pinned) {
+          await deps.reply(userId, `Опубликовано в канал${name} ✅, но закрепить не получилось — у бота нет права закреплять сообщения. Закрепите пост вручную или дайте боту это право и в следующий раз используйте /postpin.`);
+        } else {
+          await deps.reply(userId, `Опубликовано${result.pinned ? " и закреплено" : ""} в канал${name} ✅`);
+        }
       }
-      await deps.reply(userId, `Опубликовано${post.pin ? " и закреплено" : ""} ✅`);
       return;
     }
   }
@@ -404,6 +410,8 @@ export function registerMaxBotRoutes(
   return config;
 }
 
+export type PublishResult = { pinned: boolean; button: "open_app" | "link" };
+
 /**
  * Posts to a channel with the mini-app button under it. MAX may refuse an open_app button in a
  * channel; the post then goes with a plain link button. A fresh video may need a moment.
@@ -416,7 +424,7 @@ export async function publishToChannel(
   pin: boolean,
   fetcher: typeof fetch = fetch,
   wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
-): Promise<void> {
+): Promise<PublishResult> {
   const link = `${config.origin}/max?utm_source=max_channel`;
   const keyboards: Button[][][] = config.username
     ? [[[{ type: "open_app", text: "Рассчитать ремонт", web_app: config.username }]], [[{ type: "link", text: "Рассчитать ремонт", url: link }]]]
@@ -430,8 +438,18 @@ export async function publishToChannel(
           attachments: [...media, { type: "inline_keyboard", payload: { buttons } }],
         }, fetcher)) as { message?: { body?: { mid?: string } } };
         const mid = result.message?.body?.mid;
-        if (pin && mid) await callMax(config, "PUT", `/chats/${chatId}/pin`, { message_id: mid, notify: false }, fetcher);
-        return;
+        const button = buttons[0][0].type === "open_app" ? "open_app" : "link";
+        // The post is out; a failed pin must not make it look unpublished (a retry would post it twice).
+        let pinned = false;
+        if (pin && mid) {
+          try {
+            await callMax(config, "PUT", `/chats/${chatId}/pin`, { message_id: mid, notify: false }, fetcher);
+            pinned = true;
+          } catch (error) {
+            console.error("[MAX] pin failed:", scrub(error instanceof Error ? error.message : String(error), config));
+          }
+        }
+        return { pinned, button };
       } catch (error) {
         lastError = error;
         const notReady = error instanceof Error && error.message.includes("attachment.not.ready");
