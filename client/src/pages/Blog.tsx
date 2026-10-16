@@ -9,7 +9,7 @@ import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components
 import { Dot, FaqIcon, ICON_STROKE, SectionLabel, SiteFooter, SiteHeader } from "@/components/KremChrome";
 import NotFound from "@/pages/NotFound";
 
-function Breadcrumbs({ items }: { items: Array<{ href?: string; label: string }> }) {
+export function Breadcrumbs({ items }: { items: Array<{ href?: string; label: string }> }) {
   return (
     <nav className="k-breadcrumbs" aria-label="Хлебные крошки">
       {items.map((item, index) => (

@@ -1,6 +1,7 @@
 import { blogArticleJsonLd, blogIndexJsonLd, getBlogPostFromPath } from "@/content/blog";
 import { ogImageFor, siteImages } from "@/content/media";
 import { ORGANIZATION_ID, organizationLogo, websiteJsonLd } from "@/content/organization";
+import { getServicePageFromPath, serviceJsonLd } from "@/content/services";
 
 export type HeadMeta = {
   title: string;
@@ -86,6 +87,20 @@ export function prefetchForPath(url: string): HeadMeta {
       ogImageAlt: "Современный интерьер квартиры в Москве",
       canonicalPath: "/blog",
       structuredData: blogIndexJsonLd,
+    };
+  }
+
+  const service = getServicePageFromPath(path);
+  if (service) {
+    return {
+      title: service.title,
+      description: service.description,
+      ogType: "website",
+      ogImage: ogImageFor(service.image),
+      ogImageAlt: service.imageAlt,
+      canonicalPath: service.path,
+      modifiedAt: service.modifiedAt,
+      structuredData: serviceJsonLd(service),
     };
   }
 

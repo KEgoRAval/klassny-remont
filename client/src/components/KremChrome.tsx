@@ -23,7 +23,7 @@ export function KremLogo({ size = "header" }: { size?: "header" | "footer" }) {
   );
 }
 
-type Page = "home" | "blog" | "legal";
+type Page = "home" | "blog" | "legal" | "service";
 
 /** Section links of the home page; elsewhere they lead back to it. */
 function navLinks(page: Page) {
@@ -80,7 +80,7 @@ export function SiteFooter({ page }: { page: Page }) {
     <footer className="k-footer k-container">
       <div className="k-footer-top">
         <a href={page === "home" ? "#top" : "/"} aria-label={page === "home" ? "Классный ремонт — наверх" : "Классный ремонт — главная"}><KremLogo size="footer" /></a>
-        <nav className="k-footer-links" aria-label="Навигация в подвале"><a href={`${base}#projects`}>Портфолио</a><a href={`${base}#process`}>Процесс</a><a href={`${base}#prices`}>Цены</a><a href="/blog">Блог</a><a href={`${base}#contacts`}>Контакты</a></nav>
+        <nav className="k-footer-links" aria-label="Навигация в подвале"><a href="/remont-po-dizayn-proektu">Ремонт по дизайн-проекту</a><a href="/dizayn-proekt">Дизайн-проект</a><a href={`${base}#projects`}>Портфолио</a><a href={`${base}#process`}>Процесс</a><a href={`${base}#prices`}>Цены</a><a href="/blog">Блог</a><a href={`${base}#contacts`}>Контакты</a></nav>
       </div>
       <div className="k-legal" aria-label="Реквизиты индивидуального предпринимателя"><span>ИП Бережной Егор Юрьевич</span><span><small>ОГРНИП</small><b>321527500117786</b></span><span><small>ИНН</small><b>773166101203</b></span><span><small>ОКПО</small><b>2011448980</b></span></div>
       <div className="k-footer-bottom"><span>© 2026 ИП Бережной Егор Юрьевич</span><a href="/privacy-policy">Политика обработки персональных данных</a><a href="/personal-data-consent">Согласие на обработку данных</a><span>Москва · ремонт квартир под ключ</span><a href="#top">Наверх ↑</a></div>

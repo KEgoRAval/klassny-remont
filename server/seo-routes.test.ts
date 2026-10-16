@@ -2,6 +2,7 @@ import express from "express";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { blogPosts } from "../client/src/content/blog";
+import { servicePages } from "../client/src/content/services";
 import { HOME_UPDATED_AT, registerSeoRoutes } from "./_core/seo";
 
 describe("robots.txt and sitemap.xml", () => {
@@ -43,6 +44,7 @@ describe("robots.txt and sitemap.xml", () => {
     expect(first).toBe(second);
     expect(first).toContain(`<loc>https://krem.moscow/</loc><lastmod>${HOME_UPDATED_AT}</lastmod>`);
     expect(first).toContain(`<loc>https://krem.moscow/blog</loc><lastmod>${newestPost}</lastmod>`);
-    expect(first.match(/<url>/g)).toHaveLength(blogPosts.length + 2);
+    for (const page of servicePages) expect(first).toContain(`<loc>https://krem.moscow${page.path}</loc><lastmod>${page.modifiedAt}</lastmod>`);
+    expect(first.match(/<url>/g)).toHaveLength(blogPosts.length + servicePages.length + 2);
   });
 });

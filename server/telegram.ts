@@ -71,11 +71,13 @@ export function formatLeadMessage(lead: LeadNotification, options: LeadDeliveryO
     `<b>Телефон:</b> ${escapeHtml(lead.phone)}`,
     `<b>Запрос:</b> ${escapeHtml(lead.service)}`,
     ...(lead.email ? [`<b>Email:</b> ${escapeHtml(lead.email)}`] : []),
+    ...(lead.workEstimate > 0 || fromMax ? [
     "",
     "<b>Параметры расчёта</b>",
     `<b>Площадь:</b> ${lead.area} м²`,
     `<b>${fromMax ? "Квартира" : "Уровень ремонта"}:</b> ${escapeHtml(lead.materialLabel)}`,
     `<b>Работы:</b> от ${formatRubles(lead.workEstimate)}`,
+    ] : []),
     ...attachmentLines(lead, options),
     ...(lead.autoEstimate ? ["", `🧾 <b>Автосмета:</b> ${escapeHtml(lead.autoEstimate)}`] : []),
     "",
