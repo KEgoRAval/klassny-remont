@@ -79,27 +79,36 @@ export async function extractQuantities(
 ): Promise<Extraction> {
   if (!config.apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
   const tool = toolSchema();
-  const response = await fetcher(API_URL, {
-    method: "POST",
-    headers: { "x-api-key": config.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({
-      model: config.model,
-      max_tokens: 16_000,
-      system: RULES,
-      tools: [tool],
-      tool_choice: { type: "tool", name: tool.name },
-      messages: [{ role: "user", content: [fileBlock(file), { type: "text", text: "Определи объёмы работ по этому дизайн-проекту и верни их через submit_quantities." }] }],
-    }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(`Claude API ${response.status}: ${detail}`.slice(0, 500));
+  const ask = { type: "text", text: "Определи объёмы работ по этому дизайн-проекту и верни их только вызовом инструмента submit_quantities, без текста." };
+  const messages: { role: "user" | "assistant"; content: unknown }[] = [{ role: "user", content: [fileBlock(file), ask] }];
+  // The current models refuse a forced tool_choice ("tool"/"any"), so the tool is offered with "auto"
+  // and the model is asked once more if it answers in prose instead of calling it.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await fetcher(API_URL, {
+      method: "POST",
+      headers: { "x-api-key": config.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({
+        model: config.model,
+        max_tokens: 16_000,
+        system: RULES,
+        tools: [tool],
+        tool_choice: { type: "auto" },
+        messages,
+      }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error(`Claude API ${response.status}: ${detail}`.slice(0, 500));
+    }
+    const payload = (await response.json()) as { content?: { type: string; name?: string; input?: unknown }[] };
+    const call = payload.content?.find(block => block.type === "tool_use" && block.name === tool.name);
+    if (call?.input) return normalizeExtraction(call.input);
+    const said = (payload.content ?? []).filter(block => block.type === "text");
+    if (said.length) messages.push({ role: "assistant", content: said });
+    messages.push({ role: "user", content: [{ type: "text", text: "Ответ нужен только вызовом submit_quantities. Вызови его сейчас со всеми объёмами." }] });
   }
-  const payload = (await response.json()) as { content?: { type: string; name?: string; input?: unknown }[] };
-  const call = payload.content?.find(block => block.type === "tool_use" && block.name === tool.name);
-  if (!call?.input) throw new Error("Claude API returned no quantities");
-  return normalizeExtraction(call.input);
+  throw new Error("Claude API returned no quantities");
 }
 
 const num = (value: unknown): number | null => (typeof value === "number" && Number.isFinite(value) ? value : null);
