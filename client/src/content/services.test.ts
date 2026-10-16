@@ -24,9 +24,9 @@ describe("service landing pages", () => {
     expect(nodes.find(node => node["@type"] === "FAQPage")).toBeDefined();
   });
 
-  it("names no price but the agreed «от 40 000 ₽/м²»", () => {
+  it("names no prices but the agreed «от 40 000 ₽/м²» for works and «от 4 000 ₽/м²» for design", () => {
     const text = JSON.stringify(servicePages);
     const prices = text.match(/\d[\d\s ]*\s?₽/g) ?? [];
-    for (const price of prices) expect(price.replace(/\s| /g, "")).toBe("40000₽");
+    for (const price of prices) expect(["40000₽", "4000₽"]).toContain(price.replace(/\s| /g, ""));
   });
 });
