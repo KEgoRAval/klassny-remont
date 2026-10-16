@@ -157,6 +157,8 @@ export function ServicePageView({ page }: { page: ServiceContent }) {
                 <h2>{section.heading}</h2>
                 {section.paragraphs?.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
                 {section.bullets && <ul>{section.bullets.map(bullet => <li key={bullet}>{bullet}</li>)}</ul>}
+                {section.table && <div className="k-table-scroll"><table className="k-table"><thead><tr>{section.table.headers.map(header => <th key={header}>{header}</th>)}</tr></thead><tbody>{section.table.rows.map(row => <tr key={row[0]}>{row.map((cell, index) => <td key={index}>{cell}</td>)}</tr>)}</tbody></table></div>}
+                {section.note && <p className="k-service-note">{section.note}</p>}
               </section>
             ))}
             <section className="k-article-faq" aria-labelledby="service-faq-title"><SectionLabel>Частые вопросы</SectionLabel><h2 id="service-faq-title">Что спрашивают чаще всего<Dot /></h2><div className="k-faq-list">{page.faqs.map((faq, index) => <details name="service-faq" open={index === 0} key={faq.question}><summary>{faq.question}<FaqIcon /></summary><p>{faq.answer}</p></details>)}</div></section>
