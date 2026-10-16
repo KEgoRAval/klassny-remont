@@ -1,4 +1,5 @@
 import type { LeadAttachment } from "./leadAttachments";
+import { MAX_ENTRY_LABEL } from "../client/src/lib/maxEntry";
 
 export type LeadNotification = {
   name: string;
@@ -11,6 +12,8 @@ export type LeadNotification = {
   source: "calculator" | "contact";
   /** The MAX mini-app marks its leads; the site's own forms leave this out. */
   channel?: "site" | "max";
+  /** How the MAX mini-app was opened. */
+  maxEntry?: "channel" | "bot" | "browser";
   /** Where the automatic estimate goes when the lead has no verified MAX user. */
   email?: string;
   /** Set when an automatic estimate was queued: where and when it goes to the client. */
@@ -57,7 +60,7 @@ const formatMoscowTime = (iso: string) =>
 export function formatLeadMessage(lead: LeadNotification, options: LeadDeliveryOptions = {}): string {
   const form = lead.source === "calculator" ? "Калькулятор" : "Контактная форма";
   const fromMax = lead.channel === "max";
-  const source = fromMax ? `MAX · ${lead.source === "calculator" ? "предварительный расчёт" : "смета по дизайн-проекту"}` : form;
+  const source = fromMax ? `MAX${lead.maxEntry ? ` (${MAX_ENTRY_LABEL[lead.maxEntry]})` : ""} · ${lead.source === "calculator" ? "предварительный расчёт" : "смета по дизайн-проекту"}` : form;
   const delayNote = options.delayedSince
     ? [`⚠️ <b>Доставлено с задержкой.</b> Заявка получена ${formatMoscowTime(options.delayedSince)} (МСК)`, ""]
     : [];

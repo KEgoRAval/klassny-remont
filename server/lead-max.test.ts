@@ -36,6 +36,13 @@ describe("MAX mini-app leads", () => {
     expect(message).toContain("<b>Работы:</b> от 1 520 000 ₽");
   });
 
+  it("says whether the lead came from the channel post or the bot", () => {
+    expect(leadInput.parse({ ...maxLead, maxEntry: "channel" }).maxEntry).toBe("channel");
+    expect(() => leadInput.parse({ ...maxLead, maxEntry: "instagram" })).toThrow();
+    expect(formatLeadMessage({ ...maxLead, maxEntry: "channel" })).toContain("MAX (из канала) · предварительный расчёт");
+    expect(formatLeadMessage({ ...maxLead, maxEntry: "bot" })).toContain("MAX (из бота) · предварительный расчёт");
+  });
+
   it("leaves site leads formatted as before", () => {
     const { channel: _c, ...siteLead } = maxLead;
     const message = formatLeadMessage({ ...siteLead, materialLabel: "Рациональный" }).replace(/\u00a0|\u202f/g, " ");
