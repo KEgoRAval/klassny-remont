@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { Inbox, handleUpdate, maxConfig, publishToChannel } from "./maxBot";
+import { Inbox, channelButtonUrl, handleUpdate, maxConfig, publishToChannel } from "./maxBot";
 import { ChannelStore, POST_HELP, parsePostCommand, reusableMedia } from "./maxChannel";
 
 const env = { MAX_BOT_TOKEN: "tok", MAX_WEBHOOK_SECRET: "sec_1", MAX_BOT_USERNAME: "klassny_bot", CANONICAL_ORIGIN: "https://krem.moscow" } as NodeJS.ProcessEnv;
@@ -12,7 +12,7 @@ describe("MAX channel posts", () => {
   beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), "max-channel-")); });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-  function harness() {
+  function harness(pinAllowed = true) {
     const replies: string[] = [];
     const telegram: string[] = [];
     const published: { chatId: number; text: string; media: unknown[]; pin: boolean }[] = [];
@@ -22,7 +22,7 @@ describe("MAX channel posts", () => {
       channels,
       reply: async (_u: number, text: string) => { replies.push(text); },
       toTelegram: async (html: string) => { telegram.push(html); },
-      publish: async (chatId: number, text: string, media: unknown[], pin: boolean) => { published.push({ chatId, text, media, pin }); },
+      publish: async (chatId: number, text: string, media: unknown[], pin: boolean) => { published.push({ chatId, text, media, pin }); return { pinned: pin && pinAllowed, button: "open_app" as const }; },
       channelTitle: async () => "Классный ремонт",
     };
     return { deps, replies, telegram, published, channels };
@@ -50,6 +50,14 @@ describe("MAX channel posts", () => {
     expect(h.replies.at(-1)).toContain("закреплено");
   });
 
+  it("reports a published post whose pin was refused, without failing", async () => {
+    const h = harness(false);
+    h.channels.add({ chatId: -100, ownerUserId: 7, addedAt: "", title: "Канал" });
+    await handleUpdate(ownerMessage("/postpin Текст", [{ type: "video", payload: { token: "v1" } }]), h.deps);
+    expect(h.published).toHaveLength(1);
+    expect(h.replies.at(-1)).toContain("Опубликовано в канал «Канал» ✅, но закрепить не получилось");
+  });
+
   it("does not let anyone else publish", async () => {
     const h = harness();
     h.channels.add({ chatId: -100, ownerUserId: 7, addedAt: "" });
@@ -64,6 +72,13 @@ describe("MAX channel posts", () => {
     expect(h.channels.list()).toEqual([]);
   });
 
+  it("keeps a published post when the pin is refused", async () => {
+    const fetcher = (async (url: string) => url.includes("/pin")
+      ? new Response('{"code":"chat.denied"}', { status: 403 })
+      : new Response(JSON.stringify({ message: { body: { mid: "m1" } } }), { status: 200 })) as unknown as typeof fetch;
+    expect(await publishToChannel(maxConfig(env)!, -100, "Текст", [], true, fetcher, async () => {})).toEqual({ pinned: false, button: "link" });
+  });
+
   it("parses commands", () => {
     expect(parsePostCommand("/post")).toEqual({ pin: false, text: "" });
     expect(parsePostCommand("/postpin  привет\nмир")).toEqual({ pin: true, text: "привет\nмир" });
@@ -72,18 +87,22 @@ describe("MAX channel posts", () => {
     expect(reusableMedia([{ type: "sticker", payload: { token: "s" } }])).toEqual([]);
   });
 
-  it("falls back to a link button when MAX refuses the mini-app button, and pins by message id", async () => {
+  it("puts a mini-app deep link under the post and pins it by message id", async () => {
     const calls: { url: string; method?: string; body: string }[] = [];
-    let first = true;
     const fetcher = (async (url: string, init: RequestInit) => {
       calls.push({ url, method: init.method, body: String(init.body) });
-      if (url.includes("/messages") && first) { first = false; return new Response("button.not.allowed", { status: 400 }); }
       return new Response(JSON.stringify({ message: { body: { mid: "m1" } } }), { status: 200 });
     }) as unknown as typeof fetch;
-    await publishToChannel(maxConfig(env)!, -100, "Текст", [], true, fetcher, async () => {});
-    expect(calls[0].body).toContain("open_app");
-    expect(calls[1].body).toContain('"type":"link"');
-    expect(calls[1].body).toContain("utm_source=max_channel");
-    expect(calls[2]).toMatchObject({ url: "https://platform-api2.max.ru/chats/-100/pin", method: "PUT" });
+    const result = await publishToChannel(maxConfig(env)!, -100, "Текст", [], true, fetcher, async () => {});
+    expect(result).toEqual({ pinned: true, button: "link" });
+    expect(calls).toHaveLength(2);
+    expect(calls[0].body).not.toContain("open_app");
+    expect(calls[0].body).toContain("https://max.ru/klassny_bot?startapp=channel");
+    expect(calls[1]).toMatchObject({ url: "https://platform-api2.max.ru/chats/-100/pin", method: "PUT" });
   });
+
+  it("links to the site page when the bot's nick is not configured", () => {
+    expect(channelButtonUrl({ username: "", origin: "https://krem.moscow" })).toBe("https://krem.moscow/max?utm_source=max_channel");
+  });
+
 });
