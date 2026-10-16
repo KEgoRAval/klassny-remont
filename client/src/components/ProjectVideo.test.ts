@@ -20,6 +20,14 @@ describe("project videos on the home page", () => {
     expect(home).toContain('src: "/media/video/ever-walkthrough.mp4"');
   });
 
+  it("ships the ЖК Остров walkthrough as a light web video", () => {
+    const file = resolve(publicDir, "media/video/ostrov-walkthrough.mp4");
+    expect(existsSync(file)).toBe(true);
+    expect(statSync(file).size).toBeLessThan(6 * 1024 * 1024);
+    expect(existsSync(resolve(publicDir, "media/video/ostrov-walkthrough-poster.jpg"))).toBe(true);
+    expect(home).toContain('src: "/media/video/ostrov-walkthrough.mp4"');
+  });
+
   it("no longer shows the reviews block", () => {
     expect(home).not.toContain("Отзывы клиентов");
     expect(home).not.toContain("k-quote");

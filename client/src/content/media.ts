@@ -27,6 +27,7 @@ export const siteImages = {
   everEntry: { src: "/media/ever-enhanced-entry_054ed219.webp", width: 971, height: 1619 },
   everBedroom: { src: "/media/ever-enhanced-bedroom_5f368637.webp", width: 1619, height: 971 },
   everShower: { src: "/media/ever-enhanced-shower_967e9d92.webp", width: 971, height: 1619 },
+  ostrovKitchen: { src: "/media/ostrov-render-kitchen_86ef2785.webp", width: 977, height: 973 },
 } satisfies Record<string, SiteImage>;
 
 const bySrc = new Map<string, SiteImage>(Object.values(siteImages).map(image => [image.src, image]));

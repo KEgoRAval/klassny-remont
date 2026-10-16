@@ -27,6 +27,7 @@ const images = {
   everLiving: siteImages.everLiving.src,
   everBedroom: siteImages.everBedroom.src,
   everShower: siteImages.everShower.src,
+  ostrovKitchen: siteImages.ostrovKitchen.src,
 };
 
 const veryVideo: ProjectVideoSource = {
@@ -45,10 +46,18 @@ const everVideo: ProjectVideoSource = {
   height: 1206,
 };
 
+const ostrovVideo: ProjectVideoSource = {
+  src: "/media/video/ostrov-walkthrough.mp4",
+  poster: "/media/video/ostrov-walkthrough-poster.jpg",
+  title: "ЖК Остров — проход по квартире",
+  width: 720,
+  height: 720,
+};
+
 const projectCards: { image: string; title: string; meta: string; video?: ProjectVideoSource }[] = [
   { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная", video: veryVideo },
   { image: images.everLiving, title: "ЖК Ever", meta: "Кухня-гостиная", video: everVideo },
-  { image: images.veryBedroom, title: "ЖК Остров", meta: "Спальня" },
+  { image: images.ostrovKitchen, title: "ЖК Остров", meta: "Кухня-гостиная", video: ostrovVideo },
 ];
 
 const steps = [
