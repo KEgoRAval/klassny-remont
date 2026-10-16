@@ -12,6 +12,15 @@
 # setup-ci-deploy.sh is run again on the server.
 set -euo pipefail
 
+# Fetches a page and checks it is the site. Reads the whole body before searching:
+# "curl | grep -q" fails under pipefail once the page is larger than a pipe buffer,
+# because grep exits at the first match and curl then reports a write error (23).
+site_answers() {
+  local body
+  body="$(curl -fsS --max-time "$2" "$1")" || return 1
+  [[ "$body" == *'Классный Ремонт'* ]]
+}
+
 repo="KEgoRAval/klassny-remont"
 domain="krem.moscow"
 user="kegora"
@@ -70,7 +79,7 @@ systemctl restart klassny-remont
 
 healthy=false
 for _ in $(seq 1 15); do
-  if curl -fsS --max-time 10 http://127.0.0.1:3020/ | grep -q 'Классный Ремонт'; then
+  if site_answers http://127.0.0.1:3020/ 10; then
     healthy=true
     break
   fi
@@ -88,7 +97,7 @@ if [[ "$healthy" != true ]]; then
   exit 1
 fi
 
-curl -fsS --max-time 30 "https://$domain/" | grep -q 'Классный Ремонт'
+site_answers "https://$domain/" 30
 
 # Old releases take space; keep the newest few for rollback.
 current_dir="$(readlink -f "$app_root/current")/"
