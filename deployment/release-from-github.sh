@@ -9,6 +9,15 @@
 # The previous release stays in releases/; see deployment/OPERATIONS.md for rollback.
 set -euo pipefail
 
+# Fetches a page and checks it is the site. Reads the whole body before searching:
+# "curl | grep -q" fails under pipefail once the page is larger than a pipe buffer,
+# because grep exits at the first match and curl then reports a write error (23).
+site_answers() {
+  local body
+  body="$(curl -fsS --max-time "$2" "$1")" || return 1
+  [[ "$body" == *'Классный Ремонт'* ]]
+}
+
 ref="${1:-main}"
 repo="KEgoRAval/klassny-remont"
 domain="krem.moscow"
@@ -63,7 +72,7 @@ if sudo test -f "/etc/letsencrypt/live/$domain/fullchain.pem"; then
 fi
 
 for attempt in 1 2 3 4 5 6 7 8 9 10; do
-  if curl -fsS --max-time 15 http://127.0.0.1:3020/ | grep -q 'Классный Ремонт'; then
+  if site_answers http://127.0.0.1:3020/ 15; then
     break
   fi
   if [[ "$attempt" == 10 ]]; then
@@ -73,7 +82,7 @@ for attempt in 1 2 3 4 5 6 7 8 9 10; do
   fi
   sleep 2
 done
-curl -fsS --max-time 30 "https://$domain/" | grep -q 'Классный Ремонт'
+site_answers "https://$domain/" 30
 
 # Old releases take space; keep the newest few for rollback.
 ls -1d "$app_root"/releases/*/ | sort | head -n "-$keep_releases" | while read -r old; do
