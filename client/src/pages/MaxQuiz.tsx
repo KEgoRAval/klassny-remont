@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Calculator, Check, FileText, Paperclip, Phone, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { reachLeadGoal } from "@/lib/metrika";
+import { maxEntry } from "@/lib/maxEntry";
 import { PERSONAL_DATA_CONSENT_VERSION, PersonalDataConsent } from "@/components/PersonalDataConsent";
 import { Dot, ICON_STROKE, KremLogo, SectionLabel } from "@/components/KremChrome";
 import { DESIGN_FILE_ACCEPT, DESIGN_FILE_SERVER_MESSAGES, designFileProblem, formatFileSize, readFileAsBase64 } from "@/lib/designFile";
@@ -164,6 +165,7 @@ export default function MaxQuiz() {
       workEstimate: workFrom,
       source: branch === "project" ? "contact" : "calculator",
       channel: "max",
+      maxEntry: typeof window === "undefined" ? undefined : maxEntry(readMaxInitData(), window.location),
       personalDataConsent: true,
       telegramConsent: true,
       consentVersion: PERSONAL_DATA_CONSENT_VERSION,

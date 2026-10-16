@@ -8,7 +8,7 @@ type Node = Record<string, unknown>;
 
 describe("service landing pages", () => {
   it("has the pages at their SEO paths", () => {
-    expect(servicePages.map(page => page.path)).toEqual(["/remont-po-dizayn-proektu", "/dizayn-proekt", "/ceny"]);
+    expect(servicePages.map(page => page.path)).toEqual(["/remont-po-dizayn-proektu", "/dizayn-proekt", "/ceny", "/elitnyy-remont-kvartir"]);
     expect(getServicePageFromPath("/dizayn-proekt")?.slug).toBe("dizayn-proekt");
     expect(getServicePageFromPath("/dizayn")).toBeUndefined();
   });

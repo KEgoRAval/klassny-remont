@@ -38,6 +38,8 @@ export const leadInput = z.object({
   source: z.enum(["calculator", "contact"]),
   /** Where the form was opened: the site itself or the MAX mini-app. Not stored in the database. */
   channel: z.enum(["site", "max"]).optional(),
+  /** How the MAX mini-app was opened: from the channel post, from the bot, or as a page in a browser. */
+  maxEntry: z.enum(["channel", "bot", "browser"]).optional(),
   /** For the automatic estimate when the lead is not from inside MAX. */
   email: z.string().trim().max(120).email("Укажите корректный email").optional().or(z.literal("").transform(() => undefined)),
   /** Launch data of the MAX mini-app; verified on the server to know whom the bot may write to. */

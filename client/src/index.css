@@ -467,5 +467,5 @@ details[open] .k-faq-minus{display:block}
 .k-service-note{margin-top:12px;font-size:13px;color:var(--k-neutral-700)}
 .k-link-arrow{display:inline-flex;align-items:center;gap:8px;font-weight:500;color:var(--k-accent-700);text-decoration:underline;text-underline-offset:4px}
 .k-service-page .k-table{min-width:0}
-.k-service-page .k-table td:not(:first-child),.k-service-page .k-table th:not(:first-child){white-space:nowrap}
 @media (max-width:640px){.k-service-page .k-table{font-size:14px}.k-service-page .k-table th,.k-service-page .k-table td{padding:12px}.k-service-page .k-table th{letter-spacing:.02em;font-size:12px}}
+.k-service-page .k-table td{hyphens:auto;-webkit-hyphens:auto;overflow-wrap:break-word}
