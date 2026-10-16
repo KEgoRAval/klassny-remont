@@ -27,6 +27,7 @@ const images = {
   everLiving: siteImages.everLiving.src,
   everBedroom: siteImages.everBedroom.src,
   everShower: siteImages.everShower.src,
+  ostrovKitchen: siteImages.ostrovKitchen.src,
 };
 
 const veryVideo: ProjectVideoSource = {
@@ -56,7 +57,7 @@ const ostrovVideo: ProjectVideoSource = {
 const projectCards: { image: string; title: string; meta: string; video?: ProjectVideoSource }[] = [
   { image: images.veryLiving, title: "ЖК Very", meta: "Кухня-гостиная", video: veryVideo },
   { image: images.everLiving, title: "ЖК Ever", meta: "Кухня-гостиная", video: everVideo },
-  { image: images.veryBedroom, title: "ЖК Остров", meta: "Спальня", video: ostrovVideo },
+  { image: images.ostrovKitchen, title: "ЖК Остров", meta: "Кухня-гостиная", video: ostrovVideo },
 ];
 
 const steps = [
