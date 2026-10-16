@@ -412,9 +412,18 @@ export function registerMaxBotRoutes(
 
 export type PublishResult = { pinned: boolean; button: "open_app" | "link" };
 
+/** Where the channel button leads: the mini-app inside MAX when the bot's nick is known. */
+export function channelButtonUrl(config: Pick<MaxConfig, "username" | "origin">): string {
+  return config.username
+    ? `https://max.ru/${encodeURIComponent(config.username)}?startapp=channel`
+    : `${config.origin}/max?utm_source=max_channel`;
+}
+
 /**
- * Posts to a channel with the mini-app button under it. MAX may refuse an open_app button in a
- * channel; the post then goes with a plain link button. A fresh video may need a moment.
+ * Posts to a channel with a "Рассчитать ремонт" button. MAX does not accept open_app buttons in
+ * channels, so the button is a link: the bot's mini-app deep link (max.ru/<bot>?startapp=…),
+ * which MAX opens as the mini-app inside the messenger; the site page only when the bot's nick
+ * is not configured. A fresh video may need a moment.
  */
 export async function publishToChannel(
   config: MaxConfig,
@@ -425,10 +434,7 @@ export async function publishToChannel(
   fetcher: typeof fetch = fetch,
   wait: (ms: number) => Promise<void> = ms => new Promise(resolve => setTimeout(resolve, ms)),
 ): Promise<PublishResult> {
-  const link = `${config.origin}/max?utm_source=max_channel`;
-  const keyboards: Button[][][] = config.username
-    ? [[[{ type: "open_app", text: "Рассчитать ремонт", web_app: config.username }]], [[{ type: "link", text: "Рассчитать ремонт", url: link }]]]
-    : [[[{ type: "link", text: "Рассчитать ремонт", url: link }]]];
+  const keyboards: Button[][][] = [[[{ type: "link", text: "Рассчитать ремонт", url: channelButtonUrl(config) }]]];
   let lastError: unknown;
   for (const buttons of keyboards) {
     for (let attempt = 1; attempt <= 5; attempt++) {
