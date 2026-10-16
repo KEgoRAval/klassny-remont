@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { blogPosts } from "../../client/src/content/blog";
+import { servicePages } from "../../client/src/content/services";
 
 const siteOrigin = () => (process.env.CANONICAL_ORIGIN ?? "").replace(/\/+$/, "");
 
@@ -32,6 +33,7 @@ export function registerSeoRoutes(app: Express) {
     }
     const urls = [
       { path: "/", lastmod: HOME_UPDATED_AT, priority: "1.0" },
+      ...servicePages.map(page => ({ path: page.path, lastmod: page.modifiedAt, priority: "0.9" })),
       { path: "/blog", lastmod: blogUpdatedAt(), priority: "0.9" },
       ...blogPosts.map(post => ({ path: post.path, lastmod: post.modifiedAt, priority: "0.8" })),
     ];

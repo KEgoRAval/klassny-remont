@@ -454,3 +454,13 @@ details[open] .k-faq-minus{display:block}
 .mx-form{padding:22px;border-radius:28px;background:var(--k-surface)}
 .mx-form-copy{font-size:14px;color:var(--k-neutral-800)}
 .mx-done{align-items:flex-start;padding-top:24px}
+
+/* Service landing pages (/remont-po-dizayn-proektu, /dizayn-proekt) */
+.k-service-highlights{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px 32px;padding-block:8px 48px}
+.k-service-highlights>div{display:flex;flex-direction:column;gap:6px;padding-top:16px;border-top:1px solid var(--k-divider)}
+.k-service-highlights b{font-family:var(--k-font-display);font-weight:400;font-size:clamp(30px,4vw,40px);line-height:1.05;color:var(--k-accent)}
+.k-service-highlights span{font-size:14px;line-height:1.4;color:var(--k-neutral-700)}
+.k-service-related{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:40px;padding-top:24px;border-top:1px solid var(--k-divider);font-size:15px}
+.k-service-related span{color:var(--k-neutral-700)}
+.k-service-related a{color:var(--k-accent-700);text-decoration:underline;text-underline-offset:3px}
+.k-service-steps{margin-top:var(--k-rhythm)}

@@ -11,6 +11,8 @@ import { CookieConsent } from "./components/CookieConsent";
 import { MessengerQuickActions } from "./components/MessengerQuickActions";
 import Home from "./pages/Home";
 import MaxQuiz from "./pages/MaxQuiz";
+import { ServicePageView } from "./pages/ServicePage";
+import { servicePages } from "./content/services";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -18,6 +20,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/max"} component={MaxQuiz} />
+      {servicePages.map(page => <Route key={page.path} path={page.path}>{() => <ServicePageView page={page} />}</Route>)}
       <Route path={"/blog"} component={BlogIndex} />
       <Route path={"/blog/:slug"} component={BlogArticle} />
       <Route path={"/privacy-policy"} component={PrivacyPolicy} />
