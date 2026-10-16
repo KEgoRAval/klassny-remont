@@ -8,7 +8,7 @@ type Node = Record<string, unknown>;
 
 describe("service landing pages", () => {
   it("has the pages at their SEO paths", () => {
-    expect(servicePages.map(page => page.path)).toEqual(["/remont-po-dizayn-proektu", "/dizayn-proekt", "/ceny", "/elitnyy-remont-kvartir"]);
+    expect(servicePages.map(page => page.path)).toEqual(["/remont-po-dizayn-proektu", "/dizayn-proekt", "/ceny", "/elitnyy-remont-kvartir", "/dizayneram"]);
     expect(getServicePageFromPath("/dizayn-proekt")?.slug).toBe("dizayn-proekt");
     expect(getServicePageFromPath("/dizayn")).toBeUndefined();
   });
@@ -26,7 +26,7 @@ describe("service landing pages", () => {
   });
 
   it("names no prices on the service pages but «от 40 000 ₽/м²» for works and «от 4 000 ₽/м²» for design", () => {
-    const text = JSON.stringify(servicePages.filter(page => page.slug !== "ceny"));
+    const text = JSON.stringify(servicePages.filter(page => page.slug !== "ceny" && page.slug !== "dizayneram"));
     const prices = text.match(/\d[\d\s ]*\s?₽/g) ?? [];
     for (const price of prices) expect(["40000₽", "4000₽"]).toContain(price.replace(/\s| /g, ""));
   });
