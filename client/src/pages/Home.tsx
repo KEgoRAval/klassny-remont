@@ -316,6 +316,7 @@ export default function Home() {
             <div><SectionLabel>Открытая методология</SectionLabel><h2>Понимать бюджет <span className="k-accent">до начала работ</span><Dot /></h2></div>
             <p className="k-body">Стоимость складывается из площади, сложности инженерии и состояния объекта. Мы не называем цену «от балды» — разбираем смету построчно.</p>
             <ul className="k-ticks"><li><span><Check size={15} strokeWidth={ICON_STROKE} /></span>Рациональный ремонт — от 40 000 ₽/м²</li><li><span><Check size={15} strokeWidth={ICON_STROKE} /></span>Материалы — отдельной строкой в смете</li><li><span><Check size={15} strokeWidth={ICON_STROKE} /></span>Мебель и декор — отдельно</li></ul>
+            <a className="k-link-arrow" href="/ceny">Примерные цены на работы и пример сметы<ArrowRight size={16} strokeWidth={ICON_STROKE} /></a>
           </div>
           <div className="card elev-md k-calc">
             <div className="k-calc-top"><span className="tag tag-accent">Рациональный ремонт</span><span>без материалов, мебели и декора</span></div>
