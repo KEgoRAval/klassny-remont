@@ -27,7 +27,10 @@ echo "Проверка ключа: HTTP $code"
 echo
 echo "Почта для отправки смет клиентам (например, Яндекс 360 или Mail.ru для домена)."
 read -r -p "SMTP-сервер [smtp.yandex.ru]: " smtp_host; smtp_host="${smtp_host:-smtp.yandex.ru}"
-read -r -p "Логин (адрес ящика): " smtp_user
+read -r -p "Адрес ящика полностью (name@yandex.ru или name@вашдомен.ru): " smtp_user
+smtp_user="$(printf '%s' "$smtp_user" | tr -d '[:space:]')"
+if [[ "$smtp_user" != *@* && "$smtp_host" == smtp.yandex.ru ]]; then smtp_user="${smtp_user}@yandex.ru"; fi
+[[ "$smtp_user" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]] || { echo "Нужен полный адрес ящика — ничего не изменено." >&2; exit 1; }
 read -r -s -p "Пароль приложения для этого ящика: " smtp_pass; echo
 read -r -p "Имя отправителя [Классный ремонт]: " sender; sender="${sender:-Классный ремонт}"
 enc() { node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$1"; }
