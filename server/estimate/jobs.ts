@@ -209,6 +209,32 @@ export function clientMessage(name: string, total: number, perSquareMeter: numbe
   ].join("\n");
 }
 
+const EMAIL = /^[^\s@"'<>]+@[^\s@"'<>]+\.[^\s@"'<>]+$/;
+
+/**
+ * The envelope sender. Yandex rejects a bare login ("501 5.1.7 Bad address mailbox syntax"), which is
+ * what MAIL_FROM holds when the login was typed without the domain: take the first full address among
+ * MAIL_FROM and the SMTP login, and complete a bare Yandex login with @yandex.ru.
+ */
+export function senderAddress(env: NodeJS.ProcessEnv): string | null {
+  const clean = (value: string | undefined) => (value ?? "").trim().replace(/^["'<]+|["'>]+$/g, "");
+  let login = "";
+  let host = "";
+  try {
+    const url = new URL(env.SMTP_URL ?? "");
+    login = decodeURIComponent(url.username);
+    host = url.hostname;
+  } catch {
+    // no SMTP_URL: only MAIL_FROM can give the address
+  }
+  for (const candidate of [clean(env.MAIL_FROM), clean(login)]) {
+    if (EMAIL.test(candidate)) return candidate;
+  }
+  const bare = clean(env.MAIL_FROM) || clean(login);
+  if (bare && !bare.includes("@") && /(^|\.)yandex\.(ru|com)$/.test(host)) return `${bare}@yandex.ru`;
+  return null;
+}
+
 export async function deliverEstimate(job: EstimateJob, pdf: Buffer, estimate: { total: number; perSquareMeter: number }) {
   const text = clientMessage(job.client.name, estimate.total, estimate.perSquareMeter);
   const fileName = "Смета Классный ремонт.pdf";
@@ -219,8 +245,8 @@ export async function deliverEstimate(job: EstimateJob, pdf: Buffer, estimate: {
     return;
   }
   const url = process.env.SMTP_URL;
-  const from = process.env.MAIL_FROM;
-  if (!url || !from) throw new Error("почта не настроена (SMTP_URL, MAIL_FROM)");
+  const from = senderAddress(process.env);
+  if (!url || !from) throw new Error("почта не настроена: в MAIL_FROM нужен полный адрес ящика, например name@yandex.ru");
   await nodemailer.createTransport(url).sendMail({
     from: { name: process.env.MAIL_FROM_NAME || "Классный ремонт", address: from },
     to: job.delivery.address,
